@@ -1,0 +1,3445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenGauss 企业数据库体验中心</title>
+    <style>
+        :root {
+            --sidebar-start: #1a1c2e;
+            --sidebar-end: #2d3154;
+            --header-start: #667eea;
+            --header-end: #764ba2;
+            --page-bg: #f4f7ff;
+            --surface: #ffffff;
+            --surface-soft: #f8faff;
+            --border: #e6eaf3;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --primary: #6d5dfc;
+            --primary-soft: rgba(109, 93, 252, 0.12);
+            --success: #16a34a;
+            --success-soft: rgba(22, 163, 74, 0.14);
+            --info: #2563eb;
+            --info-soft: rgba(37, 99, 235, 0.14);
+            --warning: #d97706;
+            --warning-soft: rgba(217, 119, 6, 0.16);
+            --danger: #dc2626;
+            --danger-soft: rgba(220, 38, 38, 0.14);
+            --shadow-lg: 0 26px 50px rgba(30, 41, 59, 0.12);
+            --shadow-md: 0 16px 30px rgba(15, 23, 42, 0.08);
+            --shadow-sm: 0 8px 16px rgba(15, 23, 42, 0.05);
+            --radius-xl: 28px;
+            --radius-lg: 22px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(102, 126, 234, 0.22), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(118, 75, 162, 0.18), transparent 30%),
+                linear-gradient(180deg, #eff3ff 0%, var(--page-bg) 100%);
+            color: var(--text);
+            font-family: Inter, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
+        }
+
+        .app-shell {
+            display: grid;
+            grid-template-columns: 290px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            padding: 24px 18px;
+            background: linear-gradient(180deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
+            color: #ffffff;
+            box-shadow: 12px 0 38px rgba(15, 23, 42, 0.18);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            z-index: 20;
+        }
+
+        .sidebar::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at top right, rgba(255, 255, 255, 0.16), transparent 25%),
+                radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.08), transparent 30%);
+        }
+
+        .brand-card,
+        .sidebar-footer {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 18px;
+            backdrop-filter: blur(8px);
+        }
+
+        .brand-mark {
+            width: 54px;
+            height: 54px;
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 14px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.1));
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2);
+        }
+
+        .brand-card h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 0.02em;
+        }
+
+        .brand-card p {
+            margin: 10px 0 0;
+            font-size: 13px;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .sidebar-scroll {
+            overflow: auto;
+            padding-right: 6px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-section-label {
+            margin: 12px 0 10px;
+            padding: 0 10px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.46);
+        }
+
+        .nav-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.78);
+            border-radius: 18px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: #ffffff;
+            transform: translateX(4px);
+            background: rgba(255, 255, 255, 0.14);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+        }
+
+        .nav-icon {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .nav-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+        }
+
+        .nav-text strong {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .nav-text span {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .sidebar-footer p {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .main {
+            padding: 24px;
+            min-width: 0;
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 30px;
+            padding: 28px;
+            background: linear-gradient(135deg, var(--header-start), var(--header-end));
+            color: #ffffff;
+            display: grid;
+            grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
+            gap: 24px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 24px;
+        }
+
+        .hero::before,
+        .hero::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            pointer-events: none;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .hero::before {
+            width: 220px;
+            height: 220px;
+            right: -80px;
+            top: -60px;
+        }
+
+        .hero::after {
+            width: 160px;
+            height: 160px;
+            right: 110px;
+            bottom: -60px;
+        }
+
+        .hero-main,
+        .hero-side {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.15);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .hero h2 {
+            margin: 18px 0 12px;
+            font-size: clamp(30px, 4vw, 42px);
+            line-height: 1.1;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 760px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.84);
+        }
+
+        .hero-actions {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .hero-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            align-content: start;
+        }
+
+        .hero-metric {
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 22px;
+            padding: 18px;
+            backdrop-filter: blur(8px);
+        }
+
+        .hero-metric strong {
+            display: block;
+            font-size: 28px;
+            margin-top: 8px;
+        }
+
+        .hero-metric span {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .section {
+            display: none;
+            animation: fadeUp 0.28s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .section-head h3 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .section-head p {
+            margin: 8px 0 0;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .chip-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            padding: 9px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.78);
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .grid {
+            display: grid;
+            gap: 18px;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .grid-4 {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(230, 234, 243, 0.9);
+            box-shadow: var(--shadow-md);
+            padding: 22px;
+            min-width: 0;
+        }
+
+        .card-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .card-subtitle {
+            margin: 6px 0 0;
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.16), rgba(118, 75, 162, 0.12));
+            color: var(--primary);
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: "";
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            right: -30px;
+            top: -36px;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(109, 93, 252, 0.15), transparent 68%);
+        }
+
+        .stat-label {
+            position: relative;
+            z-index: 1;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            position: relative;
+            z-index: 1;
+            margin-top: 14px;
+            font-size: 34px;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .stat-helper {
+            position: relative;
+            z-index: 1;
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .surface-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+        }
+
+        .mini-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .mini-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+        }
+
+        .mini-list-item strong {
+            display: block;
+            font-size: 14px;
+        }
+
+        .mini-list-item span {
+            display: block;
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .mini-value {
+            font-weight: 800;
+            color: var(--primary);
+            font-size: 18px;
+            white-space: nowrap;
+        }
+
+        .button,
+        .button-secondary,
+        .button-ghost,
+        .button-danger,
+        .button-success {
+            border: 0;
+            border-radius: 14px;
+            padding: 11px 16px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .button:hover,
+        .button-secondary:hover,
+        .button-ghost:hover,
+        .button-danger:hover,
+        .button-success:hover {
+            transform: translateY(-1px);
+        }
+
+        .button:disabled,
+        .button-secondary:disabled,
+        .button-ghost:disabled,
+        .button-danger:disabled,
+        .button-success:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .button {
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--header-start), var(--header-end));
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.25);
+        }
+
+        .button-secondary {
+            background: #eef2ff;
+            color: #4338ca;
+            box-shadow: 0 12px 24px rgba(79, 70, 229, 0.12);
+        }
+
+        .button-ghost {
+            background: #f8fafc;
+            color: #334155;
+            border: 1px solid var(--border);
+        }
+
+        .button-danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .button-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .input,
+        .select,
+        .textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: #ffffff;
+            padding: 12px 14px;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .input:focus,
+        .select:focus,
+        .textarea:focus {
+            border-color: rgba(109, 93, 252, 0.7);
+            box-shadow: 0 0 0 4px rgba(109, 93, 252, 0.12);
+        }
+
+        .textarea {
+            min-height: 130px;
+            resize: vertical;
+            line-height: 1.7;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .form-grid-3 {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field.span-2 {
+            grid-column: span 2;
+        }
+
+        .field.span-3 {
+            grid-column: span 3;
+        }
+
+        .field label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .field small {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .inline-form {
+            display: grid;
+            gap: 14px;
+        }
+
+        .table-wrap {
+            overflow: auto;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: #ffffff;
+        }
+
+        .table-wrap table {
+            width: 100%;
+            min-width: 760px;
+            border-collapse: collapse;
+        }
+
+        .table-wrap th,
+        .table-wrap td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #eef2f7;
+            vertical-align: top;
+        }
+
+        .table-wrap th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #f8fbff;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #475569;
+        }
+
+        .table-wrap tbody tr:nth-child(even) {
+            background: #fbfcff;
+        }
+
+        .table-wrap tbody tr:hover {
+            background: #f4f7ff;
+        }
+
+        .table-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .subtle {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .page-pill {
+            min-width: 38px;
+            height: 38px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: #334155;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .page-pill.active {
+            border-color: transparent;
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--header-start), var(--header-end));
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.2);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .badge.active {
+            background: var(--success-soft);
+            color: var(--success);
+        }
+
+        .badge.planning {
+            background: var(--info-soft);
+            color: var(--info);
+        }
+
+        .badge.completed {
+            background: rgba(100, 116, 139, 0.14);
+            color: #475569;
+        }
+
+        .badge.present {
+            background: var(--success-soft);
+            color: var(--success);
+        }
+
+        .badge.absent {
+            background: var(--danger-soft);
+            color: var(--danger);
+        }
+
+        .badge.late {
+            background: var(--warning-soft);
+            color: var(--warning);
+        }
+
+        .project-grid,
+        .department-grid,
+        .export-grid,
+        .advanced-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        .project-card,
+        .department-card,
+        .export-card,
+        .advanced-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-card::before,
+        .department-card::before,
+        .advanced-card::before,
+        .export-card::before {
+            content: "";
+            position: absolute;
+            inset: auto auto -80px -60px;
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(109, 93, 252, 0.12), transparent 64%);
+            pointer-events: none;
+        }
+
+        .project-meta,
+        .department-meta {
+            display: grid;
+            gap: 10px;
+            margin: 18px 0;
+        }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            font-size: 13px;
+        }
+
+        .meta-row span {
+            color: var(--muted);
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 11px;
+            border-radius: 999px;
+            background: #edf2ff;
+            overflow: hidden;
+        }
+
+        .progress-value {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(135deg, var(--header-start), var(--header-end));
+        }
+
+        .analytics-layout {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+        }
+
+        .bar-list,
+        .ranking-list,
+        .query-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .bar-item {
+            display: grid;
+            gap: 8px;
+        }
+
+        .bar-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        .bar-head strong {
+            font-size: 14px;
+        }
+
+        .bar-stack {
+            border-radius: 999px;
+            overflow: hidden;
+            background: #eef2ff;
+            height: 12px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #7c3aed);
+            border-radius: inherit;
+        }
+
+        .ranking-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 14px;
+            align-items: center;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: var(--surface-soft);
+        }
+
+        .rank-number {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.16), rgba(118, 75, 162, 0.14));
+            color: var(--primary);
+        }
+
+        .ranking-item strong {
+            display: block;
+            font-size: 14px;
+        }
+
+        .ranking-item span {
+            display: block;
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .metric-box-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .metric-box {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 16px;
+            background: var(--surface-soft);
+        }
+
+        .metric-box strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 24px;
+        }
+
+        .metric-box span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .code-block {
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-family: "SFMono-Regular", Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            overflow: auto;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        .preset-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .preset-button {
+            border: 1px solid rgba(109, 93, 252, 0.16);
+            background: rgba(109, 93, 252, 0.08);
+            color: #4338ca;
+            padding: 10px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .preset-button:hover {
+            transform: translateY(-1px);
+            background: rgba(109, 93, 252, 0.14);
+        }
+
+        .result-shell {
+            display: grid;
+            gap: 12px;
+        }
+
+        .result-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .status-note {
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px dashed rgba(109, 93, 252, 0.24);
+            background: rgba(109, 93, 252, 0.04);
+            color: #4338ca;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .empty-state {
+            border: 1px dashed var(--border);
+            border-radius: 18px;
+            padding: 24px;
+            text-align: center;
+            color: var(--muted);
+            background: linear-gradient(180deg, rgba(248, 250, 255, 0.95), rgba(255, 255, 255, 0.96));
+        }
+
+        .empty-state strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #334155;
+        }
+
+        .toast-region {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            display: grid;
+            gap: 12px;
+            z-index: 120;
+        }
+
+        .toast {
+            min-width: 260px;
+            max-width: 380px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            color: #ffffff;
+            box-shadow: var(--shadow-lg);
+            display: grid;
+            gap: 6px;
+            animation: toastIn 0.25s ease;
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+        }
+
+        .toast.info {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+
+        .toast strong {
+            font-size: 14px;
+        }
+
+        .toast span {
+            font-size: 12px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.86);
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 110;
+            backdrop-filter: blur(6px);
+        }
+
+        .modal-backdrop.show {
+            display: flex;
+        }
+
+        .modal {
+            width: min(760px, 100%);
+            max-height: min(90vh, 900px);
+            overflow: auto;
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .modal-header,
+        .modal-footer {
+            padding: 20px 22px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-footer {
+            border-bottom: 0;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .modal-header h4 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .modal-header p {
+            margin: 8px 0 0;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .modal-body {
+            padding: 22px;
+            display: grid;
+            gap: 18px;
+        }
+
+        .icon-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            cursor: pointer;
+            color: #334155;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(244, 247, 255, 0.68);
+            backdrop-filter: blur(4px);
+            z-index: 90;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-card {
+            padding: 18px 22px;
+            border-radius: 20px;
+            background: #ffffff;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 3px solid rgba(109, 93, 252, 0.18);
+            border-top-color: var(--primary);
+            animation: spin 0.8s linear infinite;
+        }
+
+        .section-loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: var(--muted);
+            padding: 18px;
+        }
+
+        .section-loading.show {
+            display: flex;
+        }
+
+        .mobile-topbar {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .mobile-title {
+            font-weight: 800;
+            font-size: 18px;
+            color: #1e293b;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .hero,
+            .surface-grid,
+            .analytics-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-4 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 960px) {
+            .app-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                transform: translateX(-102%);
+                transition: transform 0.25s ease;
+                width: min(310px, 88vw);
+                height: auto;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                padding: 18px;
+            }
+
+            .mobile-topbar {
+                display: flex;
+            }
+
+            .hero {
+                border-radius: 26px;
+                padding: 24px;
+            }
+
+            .grid-3,
+            .grid-2,
+            .form-grid,
+            .form-grid-3,
+            .metric-box-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .field.span-2,
+            .field.span-3 {
+                grid-column: auto;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .main {
+                padding: 14px;
+            }
+
+            .hero {
+                padding: 20px;
+                border-radius: 22px;
+            }
+
+            .hero h2 {
+                font-size: 28px;
+            }
+
+            .hero-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 18px;
+                border-radius: 20px;
+            }
+
+            .table-wrap table {
+                min-width: 640px;
+            }
+
+            .toast-region {
+                right: 14px;
+                left: 14px;
+            }
+
+            .toast {
+                min-width: 0;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar">
+            <div class="brand-card">
+                <div class="brand-mark">🗄️</div>
+                <h1>OpenGauss 企业控制台</h1>
+                <p>围绕员工、部门、项目、分析、事务、索引、视图与 SQL 控制台构建的现代化单页体验。</p>
+            </div>
+
+            <div class="sidebar-scroll">
+                <div class="nav-section-label">导航</div>
+                <nav class="nav-list" aria-label="主导航">
+                    <button class="nav-item active" data-section="dashboard">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-text">
+                            <strong>总览仪表盘</strong>
+                            <span>业务概览与快速洞察</span>
+                        </span>
+                    </button>
+                    <button class="nav-item" data-section="employees">
+                        <span class="nav-icon">👥</span>
+                        <span class="nav-text">
+                            <strong>员工管理</strong>
+                            <span>CRUD / 搜索 / 分页</span>
+                        </span>
+                    </button>
+                    <button class="nav-item" data-section="departments">
+                        <span class="nav-icon">🏢</span>
+                        <span class="nav-text">
+                            <strong>部门管理</strong>
+                            <span>部门与经理信息</span>
+                        </span>
+                    </button>
+                    <button class="nav-item" data-section="projects">
+                        <span class="nav-icon">🚀</span>
+                        <span class="nav-text">
+                            <strong>项目管理</strong>
+                            <span>预算 / 状态 / 生命周期</span>
+                        </span>
+                    </button>
+                    <button class="nav-item" data-section="analytics">
+                        <span class="nav-icon">📈</span>
+                        <span class="nav-text">
+                            <strong>高级分析</strong>
+                            <span>聚合、排行与可视化</span>
+                        </span>
+                    </button>
+                    <button class="nav-item" data-section="advanced">
+                        <span class="nav-icon">🧠</span>
+                        <span class="nav-text">
+                            <strong>数据库高级功能</strong>
+                            <span>视图 / 索引 / 事务 / 子查询</span>
+                        </span>
+                    </button>
+                    <button class="nav-item" data-section="attendance">
+                        <span class="nav-icon">🕒</span>
+                        <span class="nav-text">
+                            <strong>考勤与绩效</strong>
+                            <span>出勤、评审与薪资历史</span>
+                        </span>
+                    </button>
+                    <button class="nav-item" data-section="sql-console">
+                        <span class="nav-icon">💻</span>
+                        <span class="nav-text">
+                            <strong>SQL 控制台</strong>
+                            <span>一键填充与执行查询</span>
+                        </span>
+                    </button>
+                    <button class="nav-item" data-section="exports">
+                        <span class="nav-icon">📤</span>
+                        <span class="nav-text">
+                            <strong>数据导出</strong>
+                            <span>CSV 导出与下载</span>
+                        </span>
+                    </button>
+                    <button class="nav-item" data-section="logs">
+                        <span class="nav-icon">📝</span>
+                        <span class="nav-text">
+                            <strong>操作日志</strong>
+                            <span>最近活动与审计轨迹</span>
+                        </span>
+                    </button>
+                </nav>
+            </div>
+
+            <div class="sidebar-footer">
+                <p>
+                    · 纯原生 HTML / CSS / JavaScript<br>
+                    · 所有交互通过 <code>fetch()</code> 调用后端 API<br>
+                    · 兼容 CRUD、统计、导出与高级数据库功能演示
+                </p>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="mobile-topbar">
+                <button class="button-ghost" id="mobileMenuButton" type="button">☰ 菜单</button>
+                <div class="mobile-title">OpenGauss 控制台</div>
+            </div>
+
+            <header class="hero">
+                <div class="hero-main">
+                    <div class="hero-eyebrow">OpenGauss · Enterprise Demo</div>
+                    <h2>更丰富、更现代、更可交互的数据库管理体验</h2>
+                    <p>
+                        覆盖员工、部门、项目、事务转账、视图与索引管理、子查询分析、SQL 控制台、CSV 导出与操作审计，
+                        让 OpenGauss 数据能力以单页控制台方式直观呈现。
+                    </p>
+                    <div class="hero-actions">
+                        <button class="button" id="heroRefreshButton" type="button">⟳ 刷新当前视图</button>
+                        <button class="button-secondary" id="heroAnalyticsButton" type="button">📈 查看高级分析</button>
+                    </div>
+                </div>
+                <div class="hero-side">
+                    <div class="hero-metrics">
+                        <div class="hero-metric">
+                            <span>在线模块</span>
+                            <strong>10</strong>
+                        </div>
+                        <div class="hero-metric">
+                            <span>高级能力</span>
+                            <strong>6+</strong>
+                        </div>
+                        <div class="hero-metric">
+                            <span>交互方式</span>
+                            <strong>Fetch API</strong>
+                        </div>
+                        <div class="hero-metric">
+                            <span>数据风格</span>
+                            <strong>SPA</strong>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <section class="section active" id="section-dashboard">
+                <div class="section-head">
+                    <div>
+                        <h3>总览仪表盘</h3>
+                        <p>聚合展示人员、组织、项目与预算体量，并快速预览部门与项目统计结果。</p>
+                    </div>
+                    <div class="chip-row">
+                        <span class="chip">实时聚合</span>
+                        <span class="chip">部门统计</span>
+                        <span class="chip">项目预算</span>
+                    </div>
+                </div>
+
+                <div class="section-loading" id="dashboardLoading">
+                    <span class="spinner"></span>
+                    <span>正在加载仪表盘数据...</span>
+                </div>
+
+                <div class="grid stats-grid" id="dashboardStats"></div>
+
+                <div class="surface-grid">
+                    <article class="card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">部门统计速览</h4>
+                                <p class="card-subtitle">来自 <code>/api/stats/departments</code> 的人数、均薪、总薪资信息。</p>
+                            </div>
+                            <div class="card-icon">🏢</div>
+                        </div>
+                        <div class="mini-list" id="dashboardDepartmentStats"></div>
+                    </article>
+
+                    <article class="card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">项目快速统计</h4>
+                                <p class="card-subtitle">来自 <code>/api/stats/projects</code> 的项目预算与成员规模。</p>
+                            </div>
+                            <div class="card-icon">🚀</div>
+                        </div>
+                        <div class="mini-list" id="dashboardProjectStats"></div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section" id="section-employees">
+                <div class="section-head">
+                    <div>
+                        <h3>员工管理</h3>
+                        <p>支持新增、编辑、删除、搜索、部门筛选与客户端分页展示。</p>
+                    </div>
+                    <div class="chip-row">
+                        <span class="chip">GET / POST / PUT / DELETE</span>
+                        <span class="chip">搜索条件查询</span>
+                    </div>
+                </div>
+
+                <article class="card">
+                    <div class="toolbar">
+                        <div class="toolbar-group">
+                            <input class="input" id="employeeSearchInput" placeholder="搜索姓名 / 邮箱 / 职位" type="search">
+                            <select class="select" id="employeeDepartmentFilter"></select>
+                            <select class="select" id="employeePageSize">
+                                <option value="5">每页 5 条</option>
+                                <option value="8" selected>每页 8 条</option>
+                                <option value="12">每页 12 条</option>
+                                <option value="20">每页 20 条</option>
+                            </select>
+                        </div>
+                        <div class="toolbar-group">
+                            <button class="button-secondary" id="employeeSearchButton" type="button">🔍 搜索</button>
+                            <button class="button-ghost" id="employeeResetButton" type="button">↺ 重置</button>
+                            <button class="button" id="addEmployeeButton" type="button">＋ 新增员工</button>
+                        </div>
+                    </div>
+                    <div class="section-loading" id="employeesLoading">
+                        <span class="spinner"></span>
+                        <span>正在加载员工数据...</span>
+                    </div>
+                    <div id="employeesTableContainer"></div>
+                    <div class="pagination" id="employeePagination"></div>
+                </article>
+            </section>
+
+            <section class="section" id="section-departments">
+                <div class="section-head">
+                    <div>
+                        <h3>部门管理</h3>
+                        <p>查看部门与经理信息，快速新增或删除部门，体现组织结构管理能力。</p>
+                    </div>
+                    <div class="chip-row">
+                        <span class="chip">部门列表</span>
+                        <span class="chip">经理信息</span>
+                    </div>
+                </div>
+
+                <article class="card">
+                    <div class="toolbar">
+                        <div class="toolbar-group">
+                            <button class="button" id="addDepartmentButton" type="button">＋ 新增部门</button>
+                            <button class="button-ghost" id="refreshDepartmentsButton" type="button">⟳ 刷新</button>
+                        </div>
+                    </div>
+                    <div class="section-loading" id="departmentsLoading">
+                        <span class="spinner"></span>
+                        <span>正在加载部门信息...</span>
+                    </div>
+                    <div class="department-grid" id="departmentGrid"></div>
+                </article>
+            </section>
+
+            <section class="section" id="section-projects">
+                <div class="section-head">
+                    <div>
+                        <h3>项目管理</h3>
+                        <p>查看项目预算、所属部门、进度状态与生命周期信息，并支持创建、删除与状态更新。</p>
+                    </div>
+                    <div class="chip-row">
+                        <span class="chip">状态徽章</span>
+                        <span class="chip">预算追踪</span>
+                        <span class="chip">PUT 状态更新</span>
+                    </div>
+                </div>
+
+                <article class="card">
+                    <div class="toolbar">
+                        <div class="toolbar-group">
+                            <button class="button" id="addProjectButton" type="button">＋ 新建项目</button>
+                            <button class="button-ghost" id="refreshProjectsButton" type="button">⟳ 刷新</button>
+                        </div>
+                    </div>
+                    <div class="section-loading" id="projectsLoading">
+                        <span class="spinner"></span>
+                        <span>正在加载项目列表...</span>
+                    </div>
+                    <div class="project-grid" id="projectGrid"></div>
+                </article>
+            </section>
+
+            <section class="section" id="section-analytics">
+                <div class="section-head">
+                    <div>
+                        <h3>高级分析</h3>
+                        <p>用 CSS 纯样式条形图、排行榜与聚合卡片呈现 OpenGauss 的统计分析能力。</p>
+                    </div>
+                    <div class="chip-row">
+                        <span class="chip">聚合函数</span>
+                        <span class="chip">窗口函数</span>
+                        <span class="chip">预算总览</span>
+                    </div>
+                </div>
+
+                <div class="section-loading" id="analyticsLoading">
+                    <span class="spinner"></span>
+                    <span>正在分析统计数据...</span>
+                </div>
+
+                <div class="analytics-layout">
+                    <article class="card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">部门薪资统计</h4>
+                                <p class="card-subtitle">使用 CSS-only 柱形进度展示部门总薪资与平均薪资。</p>
+                            </div>
+                            <div class="card-icon">💰</div>
+                        </div>
+                        <div class="bar-list" id="salaryBarList"></div>
+                    </article>
+
+                    <article class="card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">关键分析指标</h4>
+                                <p class="card-subtitle">从部门与项目统计中汇总的洞察指标。</p>
+                            </div>
+                            <div class="card-icon">✨</div>
+                        </div>
+                        <div class="metric-box-grid" id="analyticsMetrics"></div>
+                    </article>
+                </div>
+
+                <div class="analytics-layout" style="margin-top: 18px;">
+                    <article class="card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">项目预算总览</h4>
+                                <p class="card-subtitle">项目预算规模、参与人数与状态一体化展示。</p>
+                            </div>
+                            <div class="card-icon">📦</div>
+                        </div>
+                        <div class="query-list" id="projectBudgetOverview"></div>
+                    </article>
+
+                    <article class="card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">薪资排行榜</h4>
+                                <p class="card-subtitle">来自 <code>/api/stats/salary-ranking</code> 的排名结果。</p>
+                            </div>
+                            <div class="card-icon">🏆</div>
+                        </div>
+                        <div class="ranking-list" id="salaryRankingList"></div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section" id="section-advanced">
+                <div class="section-head">
+                    <div>
+                        <h3>数据库高级功能</h3>
+                        <p>展示视图管理、索引管理、批量插入、事务转账、聚合查询与复杂子查询接口。</p>
+                    </div>
+                    <div class="chip-row">
+                        <span class="chip">Views</span>
+                        <span class="chip">Indexes</span>
+                        <span class="chip">Transactions</span>
+                        <span class="chip">Subqueries</span>
+                    </div>
+                </div>
+
+                <div class="advanced-grid">
+                    <article class="card advanced-card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">视图管理</h4>
+                                <p class="card-subtitle">创建业务视图，并查询现有视图列表。</p>
+                            </div>
+                            <div class="card-icon">🪟</div>
+                        </div>
+                        <form class="inline-form" id="viewForm">
+                            <div class="field">
+                                <label for="viewName">视图名称</label>
+                                <input class="input" id="viewName" name="name" placeholder="例如: employee_overview" required>
+                            </div>
+                            <div class="field">
+                                <label for="viewQuery">查询语句</label>
+                                <textarea class="textarea" id="viewQuery" name="query" placeholder="SELECT e.name, d.name AS department, e.salary FROM employees e LEFT JOIN departments d ON e.department_id = d.id"></textarea>
+                            </div>
+                            <div class="toolbar">
+                                <div class="subtle">POST <code>/api/advanced/views</code></div>
+                                <button class="button" type="submit">创建视图</button>
+                            </div>
+                        </form>
+                        <div id="viewListContainer"></div>
+                    </article>
+
+                    <article class="card advanced-card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">索引管理</h4>
+                                <p class="card-subtitle">创建索引并查看已存在的索引列表，加速查询能力演示。</p>
+                            </div>
+                            <div class="card-icon">🗂️</div>
+                        </div>
+                        <form class="inline-form" id="indexForm">
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label for="indexTable">表名</label>
+                                    <input class="input" id="indexTable" name="table_name" placeholder="employees" required>
+                                </div>
+                                <div class="field">
+                                    <label for="indexColumn">列名</label>
+                                    <input class="input" id="indexColumn" name="column_name" placeholder="email" required>
+                                </div>
+                                <div class="field span-2">
+                                    <label for="indexName">索引名称</label>
+                                    <input class="input" id="indexName" name="index_name" placeholder="idx_employees_email">
+                                </div>
+                            </div>
+                            <div class="toolbar">
+                                <div class="subtle">POST <code>/api/advanced/indexes</code></div>
+                                <button class="button" type="submit">创建索引</button>
+                            </div>
+                        </form>
+                        <div id="indexListContainer"></div>
+                    </article>
+
+                    <article class="card advanced-card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">批量插入员工</h4>
+                                <p class="card-subtitle">每行一条记录，逗号分隔：姓名,邮箱,电话,部门ID,职位,薪资。</p>
+                            </div>
+                            <div class="card-icon">📥</div>
+                        </div>
+                        <form class="inline-form" id="batchInsertForm">
+                            <div class="field">
+                                <label for="batchRows">批量数据</label>
+                                <textarea class="textarea" id="batchRows" name="rows" placeholder="Alice,alice@example.com,13800001111,1,Data Engineer,26000&#10;Bob,bob@example.com,13800001112,2,Campaign Manager,22000"></textarea>
+                                <small>提交至 <code>/api/advanced/batch-insert</code>，适合演示批处理能力。</small>
+                            </div>
+                            <button class="button" type="submit">执行批量插入</button>
+                        </form>
+                    </article>
+
+                    <article class="card advanced-card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">事务转账演示</h4>
+                                <p class="card-subtitle">在两个员工之间转移薪资预算，体现事务一致性处理。</p>
+                            </div>
+                            <div class="card-icon">🔁</div>
+                        </div>
+                        <form class="inline-form" id="transferForm">
+                            <div class="form-grid-3">
+                                <div class="field">
+                                    <label for="transferFrom">转出员工 ID</label>
+                                    <input class="input" id="transferFrom" name="from_employee_id" placeholder="1" required>
+                                </div>
+                                <div class="field">
+                                    <label for="transferTo">转入员工 ID</label>
+                                    <input class="input" id="transferTo" name="to_employee_id" placeholder="5" required>
+                                </div>
+                                <div class="field">
+                                    <label for="transferAmount">金额</label>
+                                    <input class="input" id="transferAmount" name="amount" placeholder="1000" required>
+                                </div>
+                                <div class="field span-3">
+                                    <label for="transferReason">原因说明</label>
+                                    <input class="input" id="transferReason" name="reason" placeholder="Quarterly salary budget transfer">
+                                </div>
+                            </div>
+                            <button class="button-success" type="submit">提交事务演示</button>
+                        </form>
+                    </article>
+                </div>
+
+                <div class="grid grid-2" style="margin-top: 18px;">
+                    <article class="card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">聚合查询演示</h4>
+                                <p class="card-subtitle">点击按钮获取聚合函数示例结果。</p>
+                            </div>
+                            <div class="card-icon">∑</div>
+                        </div>
+                        <div class="toolbar">
+                            <button class="button-secondary" id="loadAggregatesButton" type="button">加载聚合结果</button>
+                        </div>
+                        <div id="aggregateContainer"></div>
+                    </article>
+
+                    <article class="card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">复杂子查询演示</h4>
+                                <p class="card-subtitle">展示利用子查询完成的复杂业务洞察。</p>
+                            </div>
+                            <div class="card-icon">🔍</div>
+                        </div>
+                        <div class="toolbar">
+                            <button class="button-secondary" id="loadSubqueryButton" type="button">加载子查询结果</button>
+                        </div>
+                        <div id="subqueryContainer"></div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section" id="section-attendance">
+                <div class="section-head">
+                    <div>
+                        <h3>考勤与绩效</h3>
+                        <p>整合考勤记录、绩效评审与薪资历史，展示多张业务表联合分析能力。</p>
+                    </div>
+                    <div class="chip-row">
+                        <span class="chip">Attendance</span>
+                        <span class="chip">Reviews</span>
+                        <span class="chip">Salary History</span>
+                    </div>
+                </div>
+
+                <div class="section-loading" id="attendanceLoading">
+                    <span class="spinner"></span>
+                    <span>正在加载考勤与绩效数据...</span>
+                </div>
+
+                <div class="grid grid-2">
+                    <article class="card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">考勤记录</h4>
+                                <p class="card-subtitle">来自 <code>/api/attendance</code> 的最新出勤数据。</p>
+                            </div>
+                            <div class="card-icon">🕘</div>
+                        </div>
+                        <div id="attendanceTableContainer"></div>
+                    </article>
+
+                    <article class="card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">绩效评审</h4>
+                                <p class="card-subtitle">来自 <code>/api/reviews</code> 的绩效评分与评价。</p>
+                            </div>
+                            <div class="card-icon">⭐</div>
+                        </div>
+                        <div id="reviewsTableContainer"></div>
+                    </article>
+                </div>
+
+                <article class="card" style="margin-top: 18px;">
+                    <div class="card-head">
+                        <div>
+                            <h4 class="card-title">薪资历史</h4>
+                            <p class="card-subtitle">来自 <code>/api/salary-history</code> 的薪资变化轨迹。</p>
+                        </div>
+                        <div class="card-icon">📜</div>
+                    </div>
+                    <div id="salaryHistoryTableContainer"></div>
+                </article>
+            </section>
+
+            <section class="section" id="section-sql-console">
+                <div class="section-head">
+                    <div>
+                        <h3>SQL 控制台</h3>
+                        <p>输入查询语句并执行，支持一键填充预设 SQL 示例。</p>
+                    </div>
+                    <div class="chip-row">
+                        <span class="chip">POST /api/sql</span>
+                        <span class="chip">Preset Queries</span>
+                    </div>
+                </div>
+
+                <article class="card">
+                    <div class="card-head">
+                        <div>
+                            <h4 class="card-title">查询工作台</h4>
+                            <p class="card-subtitle">预设查询可一键填充；结果会自动渲染为表格。</p>
+                        </div>
+                        <div class="card-icon">⌨️</div>
+                    </div>
+                    <div class="preset-grid" id="sqlPresetButtons"></div>
+                    <div class="field">
+                        <label for="sqlInput">SQL 输入</label>
+                        <textarea class="textarea" id="sqlInput" placeholder="SELECT * FROM employees WHERE salary > 20000"></textarea>
+                    </div>
+                    <div class="toolbar">
+                        <div class="status-note">仅允许查询语句；提交时采用 <code>application/x-www-form-urlencoded</code> 编码。</div>
+                        <button class="button" id="executeSqlButton" type="button">▶ 执行 SQL</button>
+                    </div>
+                    <div class="result-shell">
+                        <div class="result-meta">
+                            <span id="sqlResultSummary">等待执行查询...</span>
+                            <span id="sqlResultTimestamp">--</span>
+                        </div>
+                        <div id="sqlResultContainer"></div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="section" id="section-exports">
+                <div class="section-head">
+                    <div>
+                        <h3>数据导出</h3>
+                        <p>从 API 获取 JSON 数据后在浏览器端生成 CSV，实现无需第三方库的导出下载体验。</p>
+                    </div>
+                    <div class="chip-row">
+                        <span class="chip">CSV Export</span>
+                        <span class="chip">Client-side Generation</span>
+                    </div>
+                </div>
+
+                <div class="export-grid">
+                    <article class="card export-card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">导出员工数据</h4>
+                                <p class="card-subtitle">获取 <code>/api/export/employees</code> 并生成员工 CSV。</p>
+                            </div>
+                            <div class="card-icon">👤</div>
+                        </div>
+                        <div class="status-note">适合用于共享通讯录、薪资归档或离线分析。</div>
+                        <div class="toolbar" style="margin-top: 16px;">
+                            <button class="button" id="exportEmployeesButton" type="button">下载员工 CSV</button>
+                        </div>
+                    </article>
+
+                    <article class="card export-card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">导出部门统计</h4>
+                                <p class="card-subtitle">获取 <code>/api/export/dept-stats</code> 并生成部门统计 CSV。</p>
+                            </div>
+                            <div class="card-icon">📊</div>
+                        </div>
+                        <div class="status-note">适合预算评审、组织盘点与月度汇报。</div>
+                        <div class="toolbar" style="margin-top: 16px;">
+                            <button class="button-secondary" id="exportDeptStatsButton" type="button">下载部门统计 CSV</button>
+                        </div>
+                    </article>
+
+                    <article class="card export-card">
+                        <div class="card-head">
+                            <div>
+                                <h4 class="card-title">导出说明</h4>
+                                <p class="card-subtitle">展示导出链路、最近导出状态与预期文件格式。</p>
+                            </div>
+                            <div class="card-icon">📦</div>
+                        </div>
+                        <div id="exportStatusContainer" class="status-note">尚未执行导出操作。</div>
+                        <div class="code-block" style="margin-top: 16px;">CSV Headers 将依据返回 JSON 的键名自动生成，支持 Excel / Numbers / LibreOffice 打开。</div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section" id="section-logs">
+                <div class="section-head">
+                    <div>
+                        <h3>操作日志</h3>
+                        <p>查看最近的操作轨迹，用于审计、回溯与业务操作观察。</p>
+                    </div>
+                    <div class="chip-row">
+                        <span class="chip">Audit Trail</span>
+                        <span class="chip">Recent Activities</span>
+                    </div>
+                </div>
+
+                <article class="card">
+                    <div class="toolbar">
+                        <div class="toolbar-group">
+                            <button class="button-ghost" id="refreshLogsButton" type="button">⟳ 刷新日志</button>
+                        </div>
+                    </div>
+                    <div class="section-loading" id="logsLoading">
+                        <span class="spinner"></span>
+                        <span>正在加载操作日志...</span>
+                    </div>
+                    <div id="logsTableContainer"></div>
+                </article>
+            </section>
+        </main>
+    </div>
+
+    <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <div class="modal-header">
+                <div>
+                    <h4 id="modalTitle">表单</h4>
+                    <p id="modalDescription">请填写以下信息。</p>
+                </div>
+                <button class="icon-button" id="modalCloseButton" type="button" aria-label="关闭弹窗">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="globalLoading">
+        <div class="loading-card">
+            <span class="spinner"></span>
+            <span>正在与 OpenGauss 服务端交互...</span>
+        </div>
+    </div>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+
+    <script>
+        const state = {
+            activeSection: 'dashboard',
+            employees: [],
+            departments: [],
+            projects: [],
+            departmentStats: [],
+            projectStats: [],
+            salaryRanking: [],
+            attendance: [],
+            reviews: [],
+            salaryHistory: [],
+            logs: [],
+            views: [],
+            indexes: [],
+            aggregates: null,
+            subquery: null,
+            employeeSearch: '',
+            employeeDepartmentFilter: 'all',
+            employeePage: 1,
+            employeePageSize: 8,
+            employeeEditing: null,
+            exportMessage: '尚未执行导出操作。',
+            loadedSections: {}
+        };
+
+        const utf8Bom = '\ufeff';
+
+        const sqlPresets = [
+            {
+                label: '高薪员工',
+                sql: 'SELECT id, name, position, salary FROM employees WHERE salary > 20000 ORDER BY salary DESC'
+            },
+            {
+                label: '部门人数统计',
+                sql: 'SELECT d.name, COUNT(e.id) AS employee_count FROM departments d LEFT JOIN employees e ON d.id = e.department_id GROUP BY d.name ORDER BY employee_count DESC'
+            },
+            {
+                label: '项目预算排名',
+                sql: 'SELECT name, status, budget FROM projects ORDER BY budget DESC'
+            },
+            {
+                label: '考勤异常',
+                sql: "SELECT e.name, a.record_date, a.status FROM attendance a JOIN employees e ON e.id = a.employee_id WHERE a.status <> 'present' ORDER BY a.record_date DESC"
+            }
+        ];
+
+        const els = {
+            sidebar: document.getElementById('sidebar'),
+            mobileMenuButton: document.getElementById('mobileMenuButton'),
+            heroRefreshButton: document.getElementById('heroRefreshButton'),
+            heroAnalyticsButton: document.getElementById('heroAnalyticsButton'),
+            globalLoading: document.getElementById('globalLoading'),
+            toastRegion: document.getElementById('toastRegion'),
+            modalBackdrop: document.getElementById('modalBackdrop'),
+            modalTitle: document.getElementById('modalTitle'),
+            modalDescription: document.getElementById('modalDescription'),
+            modalBody: document.getElementById('modalBody'),
+            modalFooter: document.getElementById('modalFooter'),
+            modalCloseButton: document.getElementById('modalCloseButton')
+        };
+
+        function showGlobalLoading(show) {
+            els.globalLoading.classList.toggle('show', Boolean(show));
+        }
+
+        function setSectionLoading(id, show) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.toggle('show', Boolean(show));
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function currency(value) {
+            const number = Number(value || 0);
+            return new Intl.NumberFormat('zh-CN', {
+                style: 'currency',
+                currency: 'CNY',
+                maximumFractionDigits: 0
+            }).format(Number.isFinite(number) ? number : 0);
+        }
+
+        function formatNumber(value) {
+            const number = Number(value || 0);
+            return new Intl.NumberFormat('zh-CN').format(Number.isFinite(number) ? number : 0);
+        }
+
+        function formatDate(value) {
+            if (!value) {
+                return '—';
+            }
+            return String(value).replace('T', ' ').replace('.000Z', '');
+        }
+
+        function nowLabel() {
+            return new Date().toLocaleString('zh-CN', {
+                hour12: false
+            });
+        }
+
+        function showToast(title, message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<strong>${escapeHtml(title)}</strong><span>${escapeHtml(message)}</span>`;
+            els.toastRegion.appendChild(toast);
+            window.setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(8px)';
+                window.setTimeout(() => toast.remove(), 220);
+            }, 3200);
+        }
+
+        function openModal({ title, description, bodyHtml, footerHtml }) {
+            els.modalTitle.textContent = title;
+            els.modalDescription.textContent = description;
+            els.modalBody.innerHTML = bodyHtml;
+            els.modalFooter.innerHTML = footerHtml;
+            els.modalBackdrop.classList.add('show');
+            els.modalBackdrop.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeModal() {
+            els.modalBackdrop.classList.remove('show');
+            els.modalBackdrop.setAttribute('aria-hidden', 'true');
+            els.modalBody.innerHTML = '';
+            els.modalFooter.innerHTML = '';
+        }
+
+        function toFormBody(payload) {
+            const params = new URLSearchParams();
+            Object.entries(payload || {}).forEach(([key, value]) => {
+                params.append(key, value == null ? '' : String(value));
+            });
+            return params.toString();
+        }
+
+        async function fetchJson(url, options = {}) {
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    Accept: 'application/json',
+                    ...(options.headers || {})
+                }
+            });
+            const text = await response.text();
+            let data;
+            try {
+                data = text ? JSON.parse(text) : null;
+            } catch (error) {
+                throw new Error(`接口返回了无法解析的 JSON：${text.slice(0, 120)}`);
+            }
+
+            if (!response.ok) {
+                const message = data && (data.message || data.error) ? (data.message || data.error) : `请求失败：${response.status}`;
+                throw new Error(message);
+            }
+
+            if (data && data.success === false) {
+                throw new Error(data.message || '操作未成功完成');
+            }
+
+            return data;
+        }
+
+        async function sendForm(url, method, payload) {
+            return fetchJson(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                },
+                body: toFormBody(payload)
+            });
+        }
+
+        function normalizeList(payload) {
+            if (Array.isArray(payload)) {
+                return payload;
+            }
+            if (payload && Array.isArray(payload.data)) {
+                return payload.data;
+            }
+            if (payload && Array.isArray(payload.rows)) {
+                return payload.rows;
+            }
+            if (payload && Array.isArray(payload.items)) {
+                return payload.items;
+            }
+            return [];
+        }
+
+        function renderEmpty(message, detail) {
+            return `
+                <div class="empty-state">
+                    <strong>${escapeHtml(message)}</strong>
+                    <div>${escapeHtml(detail || '暂无可展示数据。')}</div>
+                </div>
+            `;
+        }
+
+        function renderBadge(value) {
+            const raw = String(value || '').toLowerCase();
+            const safe = escapeHtml(value || 'unknown');
+            const klass = ['active', 'planning', 'completed', 'present', 'absent', 'late'].includes(raw) ? raw : '';
+            return `<span class="badge ${klass}">${safe}</span>`;
+        }
+
+        function renderTable(containerId, rows, columns, emptyTitle, emptyDetail) {
+            const container = document.getElementById(containerId);
+            if (!container) {
+                return;
+            }
+            const data = normalizeList(rows);
+            if (!data.length) {
+                container.innerHTML = renderEmpty(emptyTitle, emptyDetail);
+                return;
+            }
+            const headers = columns || Object.keys(data[0]);
+            const thead = headers.map((header) => `<th>${escapeHtml(header.label || header)}</th>`).join('');
+            const tbody = data.map((row) => {
+                const cells = headers.map((header) => {
+                    const key = header.key || header;
+                    const formatter = header.formatter;
+                    const value = formatter ? formatter(row[key], row) : escapeHtml(row[key] ?? '—');
+                    return `<td>${value}</td>`;
+                }).join('');
+                return `<tr>${cells}</tr>`;
+            }).join('');
+            container.innerHTML = `<div class="table-wrap"><table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table></div>`;
+        }
+
+        function downloadCsv(filename, rows) {
+            const list = normalizeList(rows);
+            if (!list.length) {
+                throw new Error('暂无数据可导出');
+            }
+            const headers = Object.keys(list[0]);
+            const lines = [headers.join(',')];
+            list.forEach((row) => {
+                const values = headers.map((header) => {
+                    const cellValue = row[header];
+                    const value = cellValue === null || cellValue === undefined ? '' : String(cellValue);
+                    return `"${value.replace(/"/g, '""')}"`;
+                });
+                lines.push(values.join(','));
+            });
+            const blob = new Blob([utf8Bom + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function employeeDepartmentOptions() {
+            const options = ['<option value="all">全部部门</option>'];
+            state.departments.forEach((department) => {
+                options.push(`<option value="${escapeHtml(department.id)}">${escapeHtml(department.name)}</option>`);
+            });
+            return options.join('');
+        }
+
+        function getEmployeeFilteredRows() {
+            let rows = [...state.employees];
+            if (state.employeeDepartmentFilter !== 'all') {
+                rows = rows.filter((employee) => String(employee.department_id || '') === String(state.employeeDepartmentFilter));
+            }
+            return rows;
+        }
+
+        function renderEmployeePagination(filteredRows) {
+            const container = document.getElementById('employeePagination');
+            const total = filteredRows.length;
+            const pageSize = state.employeePageSize;
+            const totalPages = Math.max(1, Math.ceil(total / pageSize));
+            if (state.employeePage > totalPages) {
+                state.employeePage = totalPages;
+            }
+            const startIndex = total === 0 ? 0 : (state.employeePage - 1) * pageSize + 1;
+            const endIndex = Math.min(state.employeePage * pageSize, total);
+            const pills = [];
+            for (let page = 1; page <= totalPages; page += 1) {
+                pills.push(`<button class="page-pill ${page === state.employeePage ? 'active' : ''}" data-page="${page}" type="button">${page}</button>`);
+            }
+            container.innerHTML = `
+                <div class="subtle">显示 ${formatNumber(startIndex)} - ${formatNumber(endIndex)} / 共 ${formatNumber(total)} 条</div>
+                <div class="pagination-controls">
+                    <button class="button-ghost" id="employeePrevPage" type="button" ${state.employeePage === 1 ? 'disabled' : ''}>上一页</button>
+                    ${pills.join('')}
+                    <button class="button-ghost" id="employeeNextPage" type="button" ${state.employeePage === totalPages ? 'disabled' : ''}>下一页</button>
+                </div>
+            `;
+
+            const prev = document.getElementById('employeePrevPage');
+            const next = document.getElementById('employeeNextPage');
+            if (prev) {
+                prev.addEventListener('click', () => {
+                    state.employeePage = Math.max(1, state.employeePage - 1);
+                    renderEmployees();
+                });
+            }
+            if (next) {
+                next.addEventListener('click', () => {
+                    state.employeePage += 1;
+                    renderEmployees();
+                });
+            }
+            container.querySelectorAll('[data-page]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    state.employeePage = Number(button.getAttribute('data-page'));
+                    renderEmployees();
+                });
+            });
+        }
+
+        function renderEmployees() {
+            const container = document.getElementById('employeesTableContainer');
+            document.getElementById('employeeDepartmentFilter').innerHTML = employeeDepartmentOptions();
+            document.getElementById('employeeDepartmentFilter').value = state.employeeDepartmentFilter;
+
+            const filteredRows = getEmployeeFilteredRows();
+            const pageSize = state.employeePageSize;
+            const start = (state.employeePage - 1) * pageSize;
+            const pageRows = filteredRows.slice(start, start + pageSize);
+
+            if (!pageRows.length) {
+                container.innerHTML = renderEmpty('暂无符合条件的员工', '请尝试调整搜索关键字、部门筛选或新增一条记录。');
+                renderEmployeePagination(filteredRows);
+                return;
+            }
+
+            const headers = [
+                { label: 'ID', key: 'id' },
+                { label: '姓名', key: 'name' },
+                { label: '邮箱', key: 'email' },
+                { label: '部门', key: 'department' },
+                { label: '职位', key: 'position' },
+                { label: '薪资', key: 'salary', formatter: (value) => currency(value) },
+                { label: '入职日期', key: 'hire_date', formatter: (value) => escapeHtml(formatDate(value)) },
+                { label: '状态', key: 'status', formatter: (value) => renderBadge(value || 'active') },
+                {
+                    label: '操作',
+                    key: 'id',
+                    formatter: (_, row) => `
+                        <div class="table-actions">
+                            <button class="button-secondary" data-action="edit-employee" data-id="${escapeHtml(row.id)}" type="button">编辑</button>
+                            <button class="button-danger" data-action="delete-employee" data-id="${escapeHtml(row.id)}" type="button">删除</button>
+                        </div>
+                    `
+                }
+            ];
+
+            renderTable('employeesTableContainer', pageRows, headers, '暂无员工数据', '请先添加员工记录。');
+            renderEmployeePagination(filteredRows);
+
+            container.querySelectorAll('[data-action="edit-employee"]').forEach((button) => {
+                button.addEventListener('click', () => openEmployeeModal(button.getAttribute('data-id')));
+            });
+            container.querySelectorAll('[data-action="delete-employee"]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const id = button.getAttribute('data-id');
+                    const employee = state.employees.find((item) => String(item.id) === String(id));
+                    await confirmAndDelete('删除员工', `确认删除员工「${employee ? employee.name : id}」吗？`, async () => {
+                        await fetchJson(`/api/employees?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+                        showToast('删除成功', '员工记录已删除。');
+                        await loadEmployees(true);
+                        await loadDashboard(true);
+                        await loadLogs(true);
+                    });
+                });
+            });
+        }
+
+        function renderDepartments() {
+            const container = document.getElementById('departmentGrid');
+            if (!state.departments.length) {
+                container.innerHTML = renderEmpty('暂无部门数据', '可点击右上角按钮添加新的部门记录。');
+                return;
+            }
+            container.innerHTML = state.departments.map((department) => `
+                <article class="card department-card">
+                    <div class="card-head">
+                        <div>
+                            <h4 class="card-title">${escapeHtml(department.name)}</h4>
+                            <p class="card-subtitle">部门 ID #${escapeHtml(department.id)}</p>
+                        </div>
+                        <div class="card-icon">🏢</div>
+                    </div>
+                    <div class="department-meta">
+                        <div class="meta-row"><span>部门经理</span><strong>${escapeHtml(department.manager_name || '未设置')}</strong></div>
+                        <div class="meta-row"><span>描述</span><strong>${escapeHtml(department.description || '暂无')}</strong></div>
+                        <div class="meta-row"><span>创建时间</span><strong>${escapeHtml(formatDate(department.created_at))}</strong></div>
+                    </div>
+                    <div class="toolbar">
+                        <div class="subtle">经理 ID：${escapeHtml(department.manager_id || '—')}</div>
+                        <button class="button-danger" data-delete-department="${escapeHtml(department.id)}" type="button">删除</button>
+                    </div>
+                </article>
+            `).join('');
+            container.querySelectorAll('[data-delete-department]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const id = button.getAttribute('data-delete-department');
+                    const department = state.departments.find((item) => String(item.id) === String(id));
+                    await confirmAndDelete('删除部门', `确认删除部门「${department ? department.name : id}」吗？`, async () => {
+                        await fetchJson(`/api/departments?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+                        showToast('删除成功', '部门记录已删除。');
+                        await Promise.all([loadDepartments(true), loadDashboard(true), loadLogs(true)]);
+                    });
+                });
+            });
+        }
+
+        function projectProgress(status) {
+            if (String(status).toLowerCase() === 'completed') {
+                return 100;
+            }
+            if (String(status).toLowerCase() === 'active') {
+                return 68;
+            }
+            return 32;
+        }
+
+        function renderProjects() {
+            const container = document.getElementById('projectGrid');
+            if (!state.projects.length) {
+                container.innerHTML = renderEmpty('暂无项目数据', '可点击按钮创建新的项目记录。');
+                return;
+            }
+            const statusOptions = ['planning', 'active', 'completed'];
+            container.innerHTML = state.projects.map((project) => `
+                <article class="card project-card">
+                    <div class="card-head">
+                        <div>
+                            <h4 class="card-title">${escapeHtml(project.name)}</h4>
+                            <p class="card-subtitle">${escapeHtml(project.description || '暂无描述')}</p>
+                        </div>
+                        <div>${renderBadge(project.status || 'planning')}</div>
+                    </div>
+                    <div class="project-meta">
+                        <div class="meta-row"><span>部门</span><strong>${escapeHtml(project.department || '—')}</strong></div>
+                        <div class="meta-row"><span>预算</span><strong>${currency(project.budget)}</strong></div>
+                        <div class="meta-row"><span>开始日期</span><strong>${escapeHtml(formatDate(project.start_date))}</strong></div>
+                        <div class="meta-row"><span>结束日期</span><strong>${escapeHtml(formatDate(project.end_date))}</strong></div>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-value" style="width: ${projectProgress(project.status)}%;"></div>
+                    </div>
+                    <div class="toolbar" style="margin-top: 16px;">
+                        <div class="toolbar-group">
+                            <select class="select" data-project-status="${escapeHtml(project.id)}">
+                                ${statusOptions.map((status) => `<option value="${status}" ${String(project.status).toLowerCase() === status ? 'selected' : ''}>${status}</option>`).join('')}
+                            </select>
+                            <button class="button-secondary" data-update-project="${escapeHtml(project.id)}" type="button">更新状态</button>
+                        </div>
+                        <button class="button-danger" data-delete-project="${escapeHtml(project.id)}" type="button">删除</button>
+                    </div>
+                </article>
+            `).join('');
+
+            container.querySelectorAll('[data-update-project]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const id = button.getAttribute('data-update-project');
+                    const select = container.querySelector(`[data-project-status="${id}"]`);
+                    const status = select ? select.value : 'planning';
+                    try {
+                        showGlobalLoading(true);
+                        await sendForm('/api/projects', 'PUT', { id, status });
+                        showToast('状态更新成功', '项目状态已同步到后端。');
+                        await Promise.all([loadProjects(true), loadProjectStats(true), loadDashboard(true), loadLogs(true)]);
+                    } catch (error) {
+                        showToast('状态更新失败', error.message || '请检查后端是否已提供 PUT /api/projects 接口。', 'error');
+                    } finally {
+                        showGlobalLoading(false);
+                    }
+                });
+            });
+
+            container.querySelectorAll('[data-delete-project]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const id = button.getAttribute('data-delete-project');
+                    const project = state.projects.find((item) => String(item.id) === String(id));
+                    await confirmAndDelete('删除项目', `确认删除项目「${project ? project.name : id}」吗？`, async () => {
+                        await fetchJson(`/api/projects?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+                        showToast('删除成功', '项目已删除。');
+                        await Promise.all([loadProjects(true), loadProjectStats(true), loadDashboard(true), loadLogs(true)]);
+                    });
+                });
+            });
+        }
+
+        function renderDashboard() {
+            const totalSalary = state.employees.reduce((sum, item) => sum + Number(item.salary || 0), 0);
+            const totalBudget = state.projects.reduce((sum, item) => sum + Number(item.budget || 0), 0);
+            const dashboardStats = [
+                {
+                    label: '员工总数',
+                    value: formatNumber(state.employees.length),
+                    helper: '覆盖在职人员与组织规模'
+                },
+                {
+                    label: '部门数量',
+                    value: formatNumber(state.departments.length),
+                    helper: '组织结构与管理单元总数'
+                },
+                {
+                    label: '项目总数',
+                    value: formatNumber(state.projects.length),
+                    helper: '项目生命周期总体规模'
+                },
+                {
+                    label: '总薪资预算',
+                    value: currency(totalSalary),
+                    helper: `项目预算池：${currency(totalBudget)}`
+                }
+            ];
+
+            document.getElementById('dashboardStats').innerHTML = dashboardStats.map((stat) => `
+                <article class="card stat-card">
+                    <div class="stat-label">${escapeHtml(stat.label)}</div>
+                    <div class="stat-value">${escapeHtml(stat.value)}</div>
+                    <div class="stat-helper">${escapeHtml(stat.helper)}</div>
+                </article>
+            `).join('');
+
+            document.getElementById('dashboardDepartmentStats').innerHTML = state.departmentStats.length ? state.departmentStats.map((item) => `
+                <div class="mini-list-item">
+                    <div>
+                        <strong>${escapeHtml(item.department)}</strong>
+                        <span>${formatNumber(item.employee_count)} 人 · 均薪 ${currency(item.avg_salary)}</span>
+                    </div>
+                    <div class="mini-value">${currency(item.total_salary)}</div>
+                </div>
+            `).join('') : renderEmpty('暂无部门统计', '等待部门统计接口返回数据。');
+
+            document.getElementById('dashboardProjectStats').innerHTML = state.projectStats.length ? state.projectStats.map((item) => `
+                <div class="mini-list-item">
+                    <div>
+                        <strong>${escapeHtml(item.project)}</strong>
+                        <span>${renderBadge(item.status)} · ${formatNumber(item.members)} 名成员</span>
+                    </div>
+                    <div class="mini-value">${currency(item.budget)}</div>
+                </div>
+            `).join('') : renderEmpty('暂无项目统计', '等待项目统计接口返回数据。');
+        }
+
+        function renderAnalytics() {
+            const bars = document.getElementById('salaryBarList');
+            const budgetOverview = document.getElementById('projectBudgetOverview');
+            const ranking = document.getElementById('salaryRankingList');
+            const metrics = document.getElementById('analyticsMetrics');
+
+            const maxSalary = Math.max(...state.departmentStats.map((item) => Number(item.total_salary || 0)), 1);
+            bars.innerHTML = state.departmentStats.length ? state.departmentStats.map((item) => {
+                const ratio = Math.max(8, Math.round((Number(item.total_salary || 0) / maxSalary) * 100));
+                return `
+                    <div class="bar-item">
+                        <div class="bar-head">
+                            <div>
+                                <strong>${escapeHtml(item.department)}</strong>
+                                <div class="subtle">${formatNumber(item.employee_count)} 人 · 均薪 ${currency(item.avg_salary)}</div>
+                            </div>
+                            <strong>${currency(item.total_salary)}</strong>
+                        </div>
+                        <div class="bar-stack"><div class="bar-fill" style="width: ${ratio}%;"></div></div>
+                    </div>
+                `;
+            }).join('') : renderEmpty('暂无统计结果', '部门统计接口尚未返回数据。');
+
+            const metricData = [
+                {
+                    label: '部门总数',
+                    value: formatNumber(state.departmentStats.length)
+                },
+                {
+                    label: '项目总预算',
+                    value: currency(state.projectStats.reduce((sum, item) => sum + Number(item.budget || 0), 0))
+                },
+                {
+                    label: '平均部门人数',
+                    value: formatNumber(state.departmentStats.length ? Math.round(state.departmentStats.reduce((sum, item) => sum + Number(item.employee_count || 0), 0) / state.departmentStats.length) : 0)
+                },
+                {
+                    label: '进行中项目',
+                    value: formatNumber(state.projectStats.filter((item) => String(item.status).toLowerCase() === 'active').length)
+                }
+            ];
+            metrics.innerHTML = metricData.map((item) => `
+                <div class="metric-box">
+                    <span>${escapeHtml(item.label)}</span>
+                    <strong>${escapeHtml(item.value)}</strong>
+                </div>
+            `).join('');
+
+            budgetOverview.innerHTML = state.projectStats.length ? state.projectStats.map((item) => `
+                <div class="mini-list-item">
+                    <div>
+                        <strong>${escapeHtml(item.project)}</strong>
+                        <span>${renderBadge(item.status)} · ${formatNumber(item.members)} 名成员</span>
+                    </div>
+                    <div class="mini-value">${currency(item.budget)}</div>
+                </div>
+            `).join('') : renderEmpty('暂无项目预算数据', '等待项目统计接口返回数据。');
+
+            ranking.innerHTML = state.salaryRanking.length ? state.salaryRanking.map((item) => `
+                <div class="ranking-item">
+                    <div class="rank-number">#${escapeHtml(item.rank)}</div>
+                    <div>
+                        <strong>${escapeHtml(item.name)}</strong>
+                        <span>${escapeHtml(item.position || '—')} · ${escapeHtml(item.department || '未分配部门')}</span>
+                    </div>
+                    <div class="mini-value">${currency(item.salary)}</div>
+                </div>
+            `).join('') : renderEmpty('暂无排行榜数据', '等待薪资排名接口返回数据。');
+        }
+
+        function renderViews() {
+            const container = document.getElementById('viewListContainer');
+            if (!state.views.length) {
+                container.innerHTML = renderEmpty('暂无视图记录', '可先通过上方表单创建一个业务视图。');
+                return;
+            }
+            renderTable('viewListContainer', state.views, null, '暂无视图记录', '请先创建视图。');
+        }
+
+        function renderIndexes() {
+            const container = document.getElementById('indexListContainer');
+            if (!state.indexes.length) {
+                container.innerHTML = renderEmpty('暂无索引记录', '可先通过上方表单创建一个索引。');
+                return;
+            }
+            renderTable('indexListContainer', state.indexes, null, '暂无索引记录', '请先创建索引。');
+        }
+
+        function renderAggregates() {
+            const container = document.getElementById('aggregateContainer');
+            const rows = normalizeList(state.aggregates);
+            if (!rows.length) {
+                container.innerHTML = renderEmpty('尚未加载聚合结果', '点击按钮从 /api/advanced/aggregates 获取数据。');
+                return;
+            }
+            renderTable('aggregateContainer', rows, null, '暂无聚合结果', '聚合接口暂无返回数据。');
+        }
+
+        function renderSubquery() {
+            const container = document.getElementById('subqueryContainer');
+            const rows = normalizeList(state.subquery);
+            if (!rows.length) {
+                container.innerHTML = renderEmpty('尚未加载子查询结果', '点击按钮从 /api/advanced/subquery 获取数据。');
+                return;
+            }
+            renderTable('subqueryContainer', rows, null, '暂无子查询结果', '子查询接口暂无返回数据。');
+        }
+
+        async function confirmAndDelete(title, detail, onConfirm) {
+            return new Promise((resolve) => {
+                openModal({
+                    title,
+                    description: detail,
+                    bodyHtml: `<div class="status-note">此操作将立即调用删除接口，且通常不可撤销。</div>`,
+                    footerHtml: `
+                        <button class="button-ghost" id="confirmCancelButton" type="button">取消</button>
+                        <button class="button-danger" id="confirmDeleteButton" type="button">确认删除</button>
+                    `
+                });
+                document.getElementById('confirmCancelButton').addEventListener('click', () => {
+                    closeModal();
+                    resolve(false);
+                });
+                document.getElementById('confirmDeleteButton').addEventListener('click', async () => {
+                    try {
+                        showGlobalLoading(true);
+                        await onConfirm();
+                    } catch (error) {
+                        showToast('操作失败', error.message || '删除失败，请稍后重试。', 'error');
+                    } finally {
+                        showGlobalLoading(false);
+                        closeModal();
+                        resolve(true);
+                    }
+                });
+            });
+        }
+
+        function openDepartmentModal() {
+            openModal({
+                title: '新增部门',
+                description: '提交后将通过 POST /api/departments 写入部门信息。',
+                bodyHtml: `
+                    <form id="departmentForm" class="inline-form">
+                        <div class="field">
+                            <label for="departmentName">部门名称</label>
+                            <input class="input" id="departmentName" name="name" placeholder="例如：数据平台部" required>
+                        </div>
+                        <div class="field">
+                            <label for="departmentDescription">部门描述</label>
+                            <textarea class="textarea" id="departmentDescription" name="description" placeholder="描述部门职责与业务范围"></textarea>
+                        </div>
+                    </form>
+                `,
+                footerHtml: `
+                    <button class="button-ghost" id="departmentCancelButton" type="button">取消</button>
+                    <button class="button" id="departmentSaveButton" type="button">保存部门</button>
+                `
+            });
+            document.getElementById('departmentCancelButton').addEventListener('click', closeModal);
+            document.getElementById('departmentSaveButton').addEventListener('click', async () => {
+                const form = document.getElementById('departmentForm');
+                const formData = new FormData(form);
+                const payload = Object.fromEntries(formData.entries());
+                try {
+                    showGlobalLoading(true);
+                    await sendForm('/api/departments', 'POST', payload);
+                    closeModal();
+                    showToast('保存成功', '部门已创建。');
+                    await Promise.all([loadDepartments(true), loadDashboard(true), loadLogs(true)]);
+                } catch (error) {
+                    showToast('保存失败', error.message || '部门创建失败。', 'error');
+                } finally {
+                    showGlobalLoading(false);
+                }
+            });
+        }
+
+        function openEmployeeModal(id) {
+            const editing = id ? state.employees.find((item) => String(item.id) === String(id)) : null;
+            state.employeeEditing = editing || null;
+            const departmentOptions = state.departments.map((department) => `<option value="${escapeHtml(department.id)}" ${editing && String(editing.department_id) === String(department.id) ? 'selected' : ''}>${escapeHtml(department.name)}</option>`).join('');
+            openModal({
+                title: editing ? '编辑员工' : '新增员工',
+                description: editing ? '更新员工信息后将通过 PUT /api/employees 提交。' : '新增员工将通过 POST /api/employees 提交。',
+                bodyHtml: `
+                    <form id="employeeForm" class="inline-form">
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="employeeName">姓名</label>
+                                <input class="input" id="employeeName" name="name" value="${escapeHtml(editing ? editing.name : '')}" required>
+                            </div>
+                            <div class="field">
+                                <label for="employeeEmail">邮箱</label>
+                                <input class="input" id="employeeEmail" name="email" type="email" value="${escapeHtml(editing ? editing.email : '')}" required>
+                            </div>
+                            <div class="field">
+                                <label for="employeePhone">电话</label>
+                                <input class="input" id="employeePhone" name="phone" value="${escapeHtml(editing ? editing.phone : '')}">
+                            </div>
+                            <div class="field">
+                                <label for="employeeDepartment">部门</label>
+                                <select class="select" id="employeeDepartment" name="department_id" required>
+                                    ${departmentOptions}
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="employeePosition">职位</label>
+                                <input class="input" id="employeePosition" name="position" value="${escapeHtml(editing ? editing.position : '')}" required>
+                            </div>
+                            <div class="field">
+                                <label for="employeeSalary">薪资</label>
+                                <input class="input" id="employeeSalary" name="salary" value="${escapeHtml(editing ? editing.salary : '')}" required>
+                            </div>
+                        </div>
+                    </form>
+                `,
+                footerHtml: `
+                    <button class="button-ghost" id="employeeCancelButton" type="button">取消</button>
+                    <button class="button" id="employeeSaveButton" type="button">${editing ? '保存修改' : '新增员工'}</button>
+                `
+            });
+            document.getElementById('employeeCancelButton').addEventListener('click', closeModal);
+            document.getElementById('employeeSaveButton').addEventListener('click', async () => {
+                const form = document.getElementById('employeeForm');
+                const payload = Object.fromEntries(new FormData(form).entries());
+                if (editing) {
+                    payload.id = editing.id;
+                }
+                try {
+                    showGlobalLoading(true);
+                    await sendForm('/api/employees', editing ? 'PUT' : 'POST', payload);
+                    closeModal();
+                    showToast('提交成功', editing ? '员工资料已更新。' : '员工已新增。');
+                    await Promise.all([loadEmployees(true), loadDepartments(true), loadDashboard(true), loadLogs(true)]);
+                } catch (error) {
+                    showToast('提交失败', error.message || '员工信息保存失败。', 'error');
+                } finally {
+                    showGlobalLoading(false);
+                }
+            });
+        }
+
+        function openProjectModal() {
+            const departmentOptions = state.departments.map((department) => `<option value="${escapeHtml(department.id)}">${escapeHtml(department.name)}</option>`).join('');
+            openModal({
+                title: '新增项目',
+                description: '将通过 POST /api/projects 创建新的项目记录。',
+                bodyHtml: `
+                    <form id="projectForm" class="inline-form">
+                        <div class="form-grid">
+                            <div class="field span-2">
+                                <label for="projectName">项目名称</label>
+                                <input class="input" id="projectName" name="name" placeholder="例如：Data Lake Upgrade" required>
+                            </div>
+                            <div class="field span-2">
+                                <label for="projectDescription">项目描述</label>
+                                <textarea class="textarea" id="projectDescription" name="description" placeholder="项目背景、目标与交付范围"></textarea>
+                            </div>
+                            <div class="field">
+                                <label for="projectDepartment">所属部门</label>
+                                <select class="select" id="projectDepartment" name="department_id" required>${departmentOptions}</select>
+                            </div>
+                            <div class="field">
+                                <label for="projectBudget">预算</label>
+                                <input class="input" id="projectBudget" name="budget" placeholder="300000" required>
+                            </div>
+                        </div>
+                    </form>
+                `,
+                footerHtml: `
+                    <button class="button-ghost" id="projectCancelButton" type="button">取消</button>
+                    <button class="button" id="projectSaveButton" type="button">创建项目</button>
+                `
+            });
+            document.getElementById('projectCancelButton').addEventListener('click', closeModal);
+            document.getElementById('projectSaveButton').addEventListener('click', async () => {
+                const payload = Object.fromEntries(new FormData(document.getElementById('projectForm')).entries());
+                try {
+                    showGlobalLoading(true);
+                    await sendForm('/api/projects', 'POST', payload);
+                    closeModal();
+                    showToast('项目创建成功', '项目记录已写入。');
+                    await Promise.all([loadProjects(true), loadProjectStats(true), loadDashboard(true), loadLogs(true)]);
+                } catch (error) {
+                    showToast('项目创建失败', error.message || '请稍后重试。', 'error');
+                } finally {
+                    showGlobalLoading(false);
+                }
+            });
+        }
+
+        async function loadDepartments(force = false) {
+            if (state.loadedSections.departments && !force) {
+                renderDepartments();
+                return;
+            }
+            setSectionLoading('departmentsLoading', true);
+            try {
+                state.departments = normalizeList(await fetchJson('/api/departments'));
+                state.loadedSections.departments = true;
+                renderDepartments();
+            } catch (error) {
+                document.getElementById('departmentGrid').innerHTML = renderEmpty('部门加载失败', error.message || '请检查部门接口。');
+                showToast('部门加载失败', error.message || '请稍后重试。', 'error');
+            } finally {
+                setSectionLoading('departmentsLoading', false);
+            }
+        }
+
+        async function loadEmployees(force = false) {
+            if (state.loadedSections.employees && !force) {
+                renderEmployees();
+                return;
+            }
+            setSectionLoading('employeesLoading', true);
+            try {
+                const query = state.employeeSearch.trim();
+                const url = query ? `/api/employees?search=${encodeURIComponent(query)}` : '/api/employees';
+                state.employees = normalizeList(await fetchJson(url));
+                if (!state.departments.length) {
+                    state.departments = normalizeList(await fetchJson('/api/departments'));
+                }
+                state.loadedSections.employees = true;
+                renderEmployees();
+            } catch (error) {
+                document.getElementById('employeesTableContainer').innerHTML = renderEmpty('员工加载失败', error.message || '请检查员工接口。');
+                showToast('员工加载失败', error.message || '请稍后重试。', 'error');
+            } finally {
+                setSectionLoading('employeesLoading', false);
+            }
+        }
+
+        async function loadProjects(force = false) {
+            if (state.loadedSections.projects && !force) {
+                renderProjects();
+                return;
+            }
+            setSectionLoading('projectsLoading', true);
+            try {
+                state.projects = normalizeList(await fetchJson('/api/projects'));
+                if (!state.departments.length) {
+                    state.departments = normalizeList(await fetchJson('/api/departments'));
+                }
+                state.loadedSections.projects = true;
+                renderProjects();
+            } catch (error) {
+                document.getElementById('projectGrid').innerHTML = renderEmpty('项目加载失败', error.message || '请检查项目接口。');
+                showToast('项目加载失败', error.message || '请稍后重试。', 'error');
+            } finally {
+                setSectionLoading('projectsLoading', false);
+            }
+        }
+
+        async function loadDepartmentStats(force = false) {
+            if (state.loadedSections.departmentStats && !force) {
+                return;
+            }
+            state.departmentStats = normalizeList(await fetchJson('/api/stats/departments'));
+            state.loadedSections.departmentStats = true;
+        }
+
+        async function loadProjectStats(force = false) {
+            if (state.loadedSections.projectStats && !force) {
+                return;
+            }
+            state.projectStats = normalizeList(await fetchJson('/api/stats/projects'));
+            state.loadedSections.projectStats = true;
+        }
+
+        async function loadSalaryRanking(force = false) {
+            if (state.loadedSections.salaryRanking && !force) {
+                return;
+            }
+            state.salaryRanking = normalizeList(await fetchJson('/api/stats/salary-ranking'));
+            state.loadedSections.salaryRanking = true;
+        }
+
+        async function loadDashboard(force = false) {
+            setSectionLoading('dashboardLoading', true);
+            try {
+                await Promise.all([
+                    loadEmployees(force),
+                    loadDepartments(force),
+                    loadProjects(force),
+                    loadDepartmentStats(force),
+                    loadProjectStats(force)
+                ]);
+                renderDashboard();
+                state.loadedSections.dashboard = true;
+            } catch (error) {
+                showToast('仪表盘加载失败', error.message || '请稍后重试。', 'error');
+            } finally {
+                setSectionLoading('dashboardLoading', false);
+            }
+        }
+
+        async function loadAnalytics(force = false) {
+            setSectionLoading('analyticsLoading', true);
+            try {
+                await Promise.all([
+                    loadDepartmentStats(force),
+                    loadProjectStats(force),
+                    loadSalaryRanking(force)
+                ]);
+                renderAnalytics();
+                state.loadedSections.analytics = true;
+            } catch (error) {
+                showToast('高级分析加载失败', error.message || '请检查统计接口。', 'error');
+            } finally {
+                setSectionLoading('analyticsLoading', false);
+            }
+        }
+
+        async function loadAttendance(force = false) {
+            if (state.loadedSections.attendance && !force) {
+                renderAttendanceSection();
+                return;
+            }
+            setSectionLoading('attendanceLoading', true);
+            try {
+                const [attendance, reviews, salaryHistory] = await Promise.all([
+                    fetchJson('/api/attendance'),
+                    fetchJson('/api/reviews'),
+                    fetchJson('/api/salary-history')
+                ]);
+                state.attendance = normalizeList(attendance);
+                state.reviews = normalizeList(reviews);
+                state.salaryHistory = normalizeList(salaryHistory);
+                renderAttendanceSection();
+                state.loadedSections.attendance = true;
+            } catch (error) {
+                showToast('考勤与绩效加载失败', error.message || '请稍后重试。', 'error');
+                document.getElementById('attendanceTableContainer').innerHTML = renderEmpty('加载失败', error.message || '');
+                document.getElementById('reviewsTableContainer').innerHTML = renderEmpty('加载失败', error.message || '');
+                document.getElementById('salaryHistoryTableContainer').innerHTML = renderEmpty('加载失败', error.message || '');
+            } finally {
+                setSectionLoading('attendanceLoading', false);
+            }
+        }
+
+        function renderAttendanceSection() {
+            renderTable(
+                'attendanceTableContainer',
+                state.attendance,
+                [
+                    { label: '员工', key: 'employee' },
+                    { label: '日期', key: 'record_date', formatter: (value) => escapeHtml(formatDate(value)) },
+                    { label: '签到', key: 'check_in', formatter: (value) => escapeHtml(formatDate(value)) },
+                    { label: '签退', key: 'check_out', formatter: (value) => escapeHtml(formatDate(value)) },
+                    { label: '状态', key: 'status', formatter: (value) => renderBadge(value) }
+                ],
+                '暂无考勤记录',
+                '等待考勤接口返回数据。'
+            );
+            renderTable(
+                'reviewsTableContainer',
+                state.reviews,
+                [
+                    { label: '员工', key: 'employee' },
+                    { label: '评审人', key: 'reviewer' },
+                    { label: '评分', key: 'score' },
+                    { label: '周期', key: 'period' },
+                    { label: '评价', key: 'comments' }
+                ],
+                '暂无绩效评审',
+                '等待评审接口返回数据。'
+            );
+            renderTable(
+                'salaryHistoryTableContainer',
+                state.salaryHistory,
+                [
+                    { label: '员工', key: 'employee' },
+                    { label: '原薪资', key: 'old_salary', formatter: (value) => currency(value) },
+                    { label: '新薪资', key: 'new_salary', formatter: (value) => currency(value) },
+                    { label: '生效日期', key: 'effective_date', formatter: (value) => escapeHtml(formatDate(value)) },
+                    { label: '原因', key: 'reason' }
+                ],
+                '暂无薪资历史',
+                '等待薪资历史接口返回数据。'
+            );
+        }
+
+        async function loadLogs(force = false) {
+            if (state.loadedSections.logs && !force) {
+                renderLogs();
+                return;
+            }
+            setSectionLoading('logsLoading', true);
+            try {
+                state.logs = normalizeList(await fetchJson('/api/logs'));
+                state.loadedSections.logs = true;
+                renderLogs();
+            } catch (error) {
+                document.getElementById('logsTableContainer').innerHTML = renderEmpty('日志加载失败', error.message || '请检查日志接口。');
+                showToast('日志加载失败', error.message || '请稍后重试。', 'error');
+            } finally {
+                setSectionLoading('logsLoading', false);
+            }
+        }
+
+        function renderLogs() {
+            renderTable(
+                'logsTableContainer',
+                state.logs,
+                [
+                    { label: 'ID', key: 'id' },
+                    { label: '表', key: 'table_name' },
+                    { label: '操作', key: 'operation' },
+                    { label: '记录 ID', key: 'record_id' },
+                    { label: '详情', key: 'details' },
+                    { label: '时间', key: 'operated_at', formatter: (value) => escapeHtml(formatDate(value)) }
+                ],
+                '暂无操作日志',
+                '等待日志接口返回数据。'
+            );
+        }
+
+        async function loadAdvanced(force = false) {
+            if (state.loadedSections.advanced && !force) {
+                renderViews();
+                renderIndexes();
+                renderAggregates();
+                renderSubquery();
+                return;
+            }
+            try {
+                const results = await Promise.allSettled([
+                    fetchJson('/api/advanced/views'),
+                    fetchJson('/api/advanced/indexes')
+                ]);
+                state.views = results[0].status === 'fulfilled' ? normalizeList(results[0].value) : [];
+                state.indexes = results[1].status === 'fulfilled' ? normalizeList(results[1].value) : [];
+                renderViews();
+                renderIndexes();
+                renderAggregates();
+                renderSubquery();
+                state.loadedSections.advanced = true;
+                if (results.some((result) => result.status === 'rejected')) {
+                    showToast('高级接口提示', '部分高级接口暂未返回数据，页面已保留可交互入口。', 'info');
+                }
+            } catch (error) {
+                showToast('高级模块加载失败', error.message || '请稍后重试。', 'error');
+            }
+        }
+
+        async function loadAggregates() {
+            try {
+                showGlobalLoading(true);
+                state.aggregates = await fetchJson('/api/advanced/aggregates');
+                renderAggregates();
+                showToast('聚合查询完成', '已获取高级聚合结果。');
+            } catch (error) {
+                showToast('聚合查询失败', error.message || '请检查高级聚合接口。', 'error');
+                document.getElementById('aggregateContainer').innerHTML = renderEmpty('聚合查询失败', error.message || '');
+            } finally {
+                showGlobalLoading(false);
+            }
+        }
+
+        async function loadSubquery() {
+            try {
+                showGlobalLoading(true);
+                state.subquery = await fetchJson('/api/advanced/subquery');
+                renderSubquery();
+                showToast('子查询加载完成', '已获取复杂子查询结果。');
+            } catch (error) {
+                showToast('子查询加载失败', error.message || '请检查高级子查询接口。', 'error');
+                document.getElementById('subqueryContainer').innerHTML = renderEmpty('子查询加载失败', error.message || '');
+            } finally {
+                showGlobalLoading(false);
+            }
+        }
+
+        async function exportData(url, filename, successLabel) {
+            try {
+                showGlobalLoading(true);
+                const payload = await fetchJson(url);
+                const rows = normalizeList(payload);
+                downloadCsv(filename, rows);
+                state.exportMessage = `${successLabel} 已于 ${nowLabel()} 导出，共 ${rows.length} 条记录。`;
+                document.getElementById('exportStatusContainer').textContent = state.exportMessage;
+                showToast('导出成功', state.exportMessage);
+            } catch (error) {
+                showToast('导出失败', error.message || '请检查导出接口。', 'error');
+                document.getElementById('exportStatusContainer').textContent = `导出失败：${error.message || '未知错误'}`;
+            } finally {
+                showGlobalLoading(false);
+            }
+        }
+
+        async function executeSql() {
+            const sql = document.getElementById('sqlInput').value.trim();
+            if (!sql) {
+                showToast('请输入 SQL', '请先填写查询语句。', 'info');
+                return;
+            }
+            try {
+                showGlobalLoading(true);
+                const result = await sendForm('/api/sql', 'POST', { sql });
+                const rows = normalizeList(result);
+                document.getElementById('sqlResultSummary').textContent = `返回 ${rows.length} 行结果`;
+                document.getElementById('sqlResultTimestamp').textContent = nowLabel();
+                renderTable('sqlResultContainer', rows, null, '暂无执行结果', '查询未返回任何数据。');
+                showToast('SQL 执行成功', `已返回 ${rows.length} 行结果。`);
+            } catch (error) {
+                document.getElementById('sqlResultSummary').textContent = '执行失败';
+                document.getElementById('sqlResultTimestamp').textContent = nowLabel();
+                document.getElementById('sqlResultContainer').innerHTML = renderEmpty('SQL 执行失败', error.message || '请检查 SQL 语句与后端限制。');
+                showToast('SQL 执行失败', error.message || '请稍后重试。', 'error');
+            } finally {
+                showGlobalLoading(false);
+            }
+        }
+
+        async function refreshCurrentSection(force = true) {
+            const section = state.activeSection;
+            if (section === 'dashboard') {
+                await loadDashboard(force);
+                return;
+            }
+            if (section === 'employees') {
+                await loadEmployees(force);
+                return;
+            }
+            if (section === 'departments') {
+                await loadDepartments(force);
+                return;
+            }
+            if (section === 'projects') {
+                await loadProjects(force);
+                return;
+            }
+            if (section === 'analytics') {
+                await loadAnalytics(force);
+                return;
+            }
+            if (section === 'advanced') {
+                await loadAdvanced(force);
+                return;
+            }
+            if (section === 'attendance') {
+                await loadAttendance(force);
+                return;
+            }
+            if (section === 'sql-console') {
+                document.getElementById('sqlResultContainer').innerHTML = renderEmpty('等待执行查询', '点击上方预设或输入 SQL 后执行。');
+                return;
+            }
+            if (section === 'exports') {
+                document.getElementById('exportStatusContainer').textContent = state.exportMessage;
+                return;
+            }
+            if (section === 'logs') {
+                await loadLogs(force);
+            }
+        }
+
+        async function switchSection(sectionId) {
+            state.activeSection = sectionId;
+            document.querySelectorAll('.nav-item').forEach((button) => {
+                button.classList.toggle('active', button.getAttribute('data-section') === sectionId);
+            });
+            document.querySelectorAll('.section').forEach((section) => {
+                section.classList.toggle('active', section.id === `section-${sectionId}`);
+            });
+            els.sidebar.classList.remove('open');
+            await refreshCurrentSection(false);
+        }
+
+        function registerNavigation() {
+            document.querySelectorAll('.nav-item').forEach((button) => {
+                button.addEventListener('click', () => switchSection(button.getAttribute('data-section')));
+            });
+        }
+
+        function registerHeroActions() {
+            els.heroRefreshButton.addEventListener('click', () => refreshCurrentSection(true));
+            els.heroAnalyticsButton.addEventListener('click', () => switchSection('analytics'));
+            els.mobileMenuButton.addEventListener('click', () => {
+                els.sidebar.classList.toggle('open');
+            });
+        }
+
+        function registerEmployeeControls() {
+            document.getElementById('employeeSearchButton').addEventListener('click', async () => {
+                state.employeeSearch = document.getElementById('employeeSearchInput').value.trim();
+                state.employeePage = 1;
+                await loadEmployees(true);
+            });
+            document.getElementById('employeeResetButton').addEventListener('click', async () => {
+                document.getElementById('employeeSearchInput').value = '';
+                state.employeeSearch = '';
+                state.employeeDepartmentFilter = 'all';
+                state.employeePage = 1;
+                await loadEmployees(true);
+            });
+            document.getElementById('employeeDepartmentFilter').addEventListener('change', (event) => {
+                state.employeeDepartmentFilter = event.target.value;
+                state.employeePage = 1;
+                renderEmployees();
+            });
+            document.getElementById('employeePageSize').addEventListener('change', (event) => {
+                state.employeePageSize = Number(event.target.value);
+                state.employeePage = 1;
+                renderEmployees();
+            });
+            document.getElementById('addEmployeeButton').addEventListener('click', () => openEmployeeModal());
+        }
+
+        function registerDepartmentControls() {
+            document.getElementById('addDepartmentButton').addEventListener('click', openDepartmentModal);
+            document.getElementById('refreshDepartmentsButton').addEventListener('click', () => loadDepartments(true));
+        }
+
+        function registerProjectControls() {
+            document.getElementById('addProjectButton').addEventListener('click', openProjectModal);
+            document.getElementById('refreshProjectsButton').addEventListener('click', () => loadProjects(true));
+        }
+
+        function registerAdvancedControls() {
+            document.getElementById('viewForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const payload = Object.fromEntries(new FormData(event.target).entries());
+                try {
+                    showGlobalLoading(true);
+                    await sendForm('/api/advanced/views', 'POST', payload);
+                    showToast('视图创建成功', '已提交创建视图请求。');
+                    event.target.reset();
+                    await loadAdvanced(true);
+                    await loadLogs(true);
+                } catch (error) {
+                    showToast('视图创建失败', error.message || '请检查高级视图接口。', 'error');
+                } finally {
+                    showGlobalLoading(false);
+                }
+            });
+
+            document.getElementById('indexForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const payload = Object.fromEntries(new FormData(event.target).entries());
+                try {
+                    showGlobalLoading(true);
+                    await sendForm('/api/advanced/indexes', 'POST', payload);
+                    showToast('索引创建成功', '已提交创建索引请求。');
+                    event.target.reset();
+                    await loadAdvanced(true);
+                    await loadLogs(true);
+                } catch (error) {
+                    showToast('索引创建失败', error.message || '请检查高级索引接口。', 'error');
+                } finally {
+                    showGlobalLoading(false);
+                }
+            });
+
+            document.getElementById('batchInsertForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const payload = Object.fromEntries(new FormData(event.target).entries());
+                try {
+                    showGlobalLoading(true);
+                    await sendForm('/api/advanced/batch-insert', 'POST', payload);
+                    showToast('批量插入成功', '批量插入请求已提交。');
+                    event.target.reset();
+                    await Promise.all([loadEmployees(true), loadDashboard(true), loadLogs(true)]);
+                } catch (error) {
+                    showToast('批量插入失败', error.message || '请检查批量插入接口。', 'error');
+                } finally {
+                    showGlobalLoading(false);
+                }
+            });
+
+            document.getElementById('transferForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const payload = Object.fromEntries(new FormData(event.target).entries());
+                try {
+                    showGlobalLoading(true);
+                    await sendForm('/api/advanced/transfer', 'POST', payload);
+                    showToast('事务演示成功', '薪资转移事务已提交。');
+                    event.target.reset();
+                    await Promise.all([loadEmployees(true), loadDashboard(true), loadLogs(true), loadAttendance(true)]);
+                } catch (error) {
+                    showToast('事务演示失败', error.message || '请检查事务接口。', 'error');
+                } finally {
+                    showGlobalLoading(false);
+                }
+            });
+
+            document.getElementById('loadAggregatesButton').addEventListener('click', loadAggregates);
+            document.getElementById('loadSubqueryButton').addEventListener('click', loadSubquery);
+        }
+
+        function registerAttendanceControls() {
+            // 该模块暂时仅提供只读展示，因此无需额外按钮监听。
+        }
+
+        function registerSqlConsole() {
+            const presetContainer = document.getElementById('sqlPresetButtons');
+            presetContainer.innerHTML = sqlPresets.map((item) => `<button class="preset-button" data-sql-preset="${escapeHtml(item.sql)}" type="button">${escapeHtml(item.label)}</button>`).join('');
+            presetContainer.querySelectorAll('[data-sql-preset]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    document.getElementById('sqlInput').value = button.getAttribute('data-sql-preset');
+                });
+            });
+            document.getElementById('executeSqlButton').addEventListener('click', executeSql);
+            document.getElementById('sqlResultContainer').innerHTML = renderEmpty('等待执行查询', '点击预设按钮或手动输入 SQL 后执行。');
+        }
+
+        function registerExportControls() {
+            document.getElementById('exportEmployeesButton').addEventListener('click', () => exportData('/api/export/employees', `employees-${Date.now()}.csv`, '员工数据'));
+            document.getElementById('exportDeptStatsButton').addEventListener('click', () => exportData('/api/export/dept-stats', `department-stats-${Date.now()}.csv`, '部门统计'));
+        }
+
+        function registerLogControls() {
+            document.getElementById('refreshLogsButton').addEventListener('click', () => loadLogs(true));
+        }
+
+        function registerModalControls() {
+            els.modalCloseButton.addEventListener('click', closeModal);
+            els.modalBackdrop.addEventListener('click', (event) => {
+                if (event.target === els.modalBackdrop) {
+                    closeModal();
+                }
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && els.modalBackdrop.classList.contains('show')) {
+                    closeModal();
+                }
+            });
+        }
+
+        async function initialize() {
+            registerNavigation();
+            registerHeroActions();
+            registerEmployeeControls();
+            registerDepartmentControls();
+            registerProjectControls();
+            registerAdvancedControls();
+            registerAttendanceControls();
+            registerSqlConsole();
+            registerExportControls();
+            registerLogControls();
+            registerModalControls();
+
+            document.getElementById('employeeDepartmentFilter').innerHTML = '<option value="all">全部部门</option>';
+            document.getElementById('exportStatusContainer').textContent = state.exportMessage;
+
+            await Promise.all([
+                loadDashboard(true),
+                loadLogs(true)
+            ]);
+        }
+
+        initialize().catch((error) => {
+            showToast('初始化失败', error.message || '页面初始化时发生异常。', 'error');
+        });
+    </script>
+</body>
+</html>

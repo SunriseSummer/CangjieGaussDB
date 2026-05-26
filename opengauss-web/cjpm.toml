@@ -6,7 +6,7 @@
   target-dir = ""
   src-dir = "src"
   output-type = "executable"
-  compile-option = "-Woff unused --diagnostic-format=noColor"
+  compile-option = "-Woff unused -Woff parser --diagnostic-format=noColor"
   override-compile-option = ""
   link-option = ""
   package-configuration = {}
