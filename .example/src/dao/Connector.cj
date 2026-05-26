@@ -13,7 +13,7 @@ public class Connector {
     public Connector(var url: String, var driverStr: String) {
         var driver = DriverManager.getDriver(driverStr).getOrThrow()
         var dataSource = driver.open(url, [])
-	    conn = dataSource.connect()
+        conn = dataSource.connect()
     }
 
     public func select(sqlStr: String, values: Array<Any>) {

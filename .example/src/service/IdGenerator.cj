@@ -102,7 +102,7 @@ public class IdGenerator {
                 }
                 var updateSql = "update ${tableName} set current_max_id = current_max_id + step where id = ? and biz_type = ?"
                 connector.update(updateSql, [result.get<Int64>(0), bizType])
-                var from= result.get<Int64>(1)
+                var from = result.get<Int64>(1)
                 var to = from + step
                 return (from, to)
             } else {
