@@ -176,6 +176,10 @@ public class DataService {
         )
     }
 
+    // Execute a user-provided SQL query in the SQL console.
+    // Security: only SELECT statements are allowed; isSelectQuery() strips leading
+    // whitespace/comments and rejects anything that is not a single SELECT statement
+    // (multi-statement via semicolons is also rejected).
     public func executeSql(sqlStr: String): String {
         if (!isSelectQuery(sqlStr)) {
             return "{\"error\":\"Only SELECT queries are allowed in SQL console\"}"
@@ -189,12 +193,14 @@ public class DataService {
                 sb.append("[")
                 var first = true
                 var rowCount = 0
+                // Limit to 100 rows to prevent excessive memory usage in the browser
                 while (result.next() && rowCount < 100) {
                     if (!first) {
                         sb.append(",")
                     }
                     first = false
                     let colVals = StringBuilder()
+                    // Display up to the first 10 columns per row (UI constraint)
                     for (k in 0..10) {
                         try {
                             let v = result.getOrNull<String>(k) ?? ""
