@@ -1,0 +1,25 @@
+[package]
+  cjc-version = "1.1.0"
+  name = "opengauss_web"
+  description = "OpenGauss Web Management Console"
+  version = "1.0.0"
+  target-dir = ""
+  src-dir = "src"
+  output-type = "executable"
+  compile-option = "-Woff unused --diagnostic-format=noColor"
+  override-compile-option = ""
+  link-option = ""
+  package-configuration = {}
+
+[dependencies]
+  "cangjie_tpc::opengauss" = { path = "../opengauss-driver" }
+
+[target.x86_64-unknown-linux-gnu]
+  [target.x86_64-unknown-linux-gnu.bin-dependencies]
+    path-option = ["${CANGJIE_STDX_PATH}"]
+[target.x86_64-w64-mingw32]
+  [target.x86_64-w64-mingw32.bin-dependencies]
+    path-option = ["${CANGJIE_STDX_PATH}"]
+[target.aarch64-unknown-linux-gnu]
+  [target.aarch64-unknown-linux-gnu.bin-dependencies]
+    path-option = ["${CANGJIE_STDX_PATH}"]
