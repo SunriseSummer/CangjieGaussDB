@@ -2405,9 +2405,8 @@
                     await confirmAndDelete('删除员工', `确认删除员工「${employee ? employee.name : id}」吗？`, async () => {
                         await fetchJson(`/api/employees?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
                         showToast('删除成功', '员工记录已删除。');
-                        await loadEmployees(true);
-                        await loadDashboard(true);
-                        await loadLogs(true);
+                        showGlobalLoading(false);
+                        await refreshAfterMutation([loadEmployees(true), loadDepartmentStats(true)]);
                     });
                 });
             });
@@ -2446,7 +2445,8 @@
                     await confirmAndDelete('删除部门', `确认删除部门「${department ? department.name : id}」吗？`, async () => {
                         await fetchJson(`/api/departments?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
                         showToast('删除成功', '部门记录已删除。');
-                        await Promise.all([loadDepartments(true), loadDashboard(true), loadLogs(true)]);
+                        showGlobalLoading(false);
+                        await refreshAfterMutation([loadDepartments(true), loadDepartmentStats(true)]);
                     });
                 });
             });
@@ -2507,8 +2507,9 @@
                     try {
                         showGlobalLoading(true);
                         await sendForm('/api/projects', 'PUT', { id, status });
+                        showGlobalLoading(false);
                         showToast('状态更新成功', '项目状态已同步到后端。');
-                        await Promise.all([loadProjects(true), loadProjectStats(true), loadDashboard(true), loadLogs(true)]);
+                        await refreshAfterMutation([loadProjects(true), loadProjectStats(true)]);
                     } catch (error) {
                         showToast('状态更新失败', error.message || '请检查后端是否已提供 PUT /api/projects 接口。', 'error');
                     } finally {
@@ -2524,7 +2525,8 @@
                     await confirmAndDelete('删除项目', `确认删除项目「${project ? project.name : id}」吗？`, async () => {
                         await fetchJson(`/api/projects?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
                         showToast('删除成功', '项目已删除。');
-                        await Promise.all([loadProjects(true), loadProjectStats(true), loadDashboard(true), loadLogs(true)]);
+                        showGlobalLoading(false);
+                        await refreshAfterMutation([loadProjects(true), loadProjectStats(true)]);
                     });
                 });
             });
@@ -2752,9 +2754,10 @@
                 try {
                     showGlobalLoading(true);
                     await sendForm('/api/departments', 'POST', payload);
+                    showGlobalLoading(false);
                     closeModal();
                     showToast('保存成功', '部门已创建。');
-                    await Promise.all([loadDepartments(true), loadDashboard(true), loadLogs(true)]);
+                    await refreshAfterMutation([loadDepartments(true), loadDepartmentStats(true)]);
                 } catch (error) {
                     showToast('保存失败', error.message || '部门创建失败。', 'error');
                 } finally {
@@ -2817,9 +2820,10 @@
                 try {
                     showGlobalLoading(true);
                     await sendForm('/api/employees', editing ? 'PUT' : 'POST', payload);
+                    showGlobalLoading(false);
                     closeModal();
                     showToast('提交成功', editing ? '员工资料已更新。' : '员工已新增。');
-                    await Promise.all([loadEmployees(true), loadDepartments(true), loadDashboard(true), loadLogs(true)]);
+                    await refreshAfterMutation([loadEmployees(true), loadDepartmentStats(true)]);
                 } catch (error) {
                     showToast('提交失败', error.message || '员工信息保存失败。', 'error');
                 } finally {
@@ -2866,9 +2870,10 @@
                 try {
                     showGlobalLoading(true);
                     await sendForm('/api/projects', 'POST', payload);
+                    showGlobalLoading(false);
                     closeModal();
                     showToast('项目创建成功', '项目记录已写入。');
-                    await Promise.all([loadProjects(true), loadProjectStats(true), loadDashboard(true), loadLogs(true)]);
+                    await refreshAfterMutation([loadProjects(true), loadProjectStats(true)]);
                 } catch (error) {
                     showToast('项目创建失败', error.message || '请稍后重试。', 'error');
                 } finally {
@@ -3200,6 +3205,23 @@
             }
         }
 
+        async function refreshAfterMutation(affectedLoaders) {
+            try {
+                await Promise.all([
+                    ...affectedLoaders,
+                    loadLogs(true)
+                ]);
+            } catch (_) {
+                // mutation already succeeded; swallow refresh errors
+            }
+            if (state.loadedSections.dashboard) {
+                renderDashboard();
+            }
+            if (state.loadedSections.analytics) {
+                renderAnalytics();
+            }
+        }
+
         async function refreshCurrentSection(force = true) {
             const section = state.activeSection;
             if (section === 'dashboard') {
@@ -3312,10 +3334,10 @@
                 try {
                     showGlobalLoading(true);
                     await sendForm('/api/advanced/views', 'POST', payload);
+                    showGlobalLoading(false);
                     showToast('视图创建成功', '已提交创建视图请求。');
                     event.target.reset();
-                    await loadAdvanced(true);
-                    await loadLogs(true);
+                    await refreshAfterMutation([loadAdvanced(true)]);
                 } catch (error) {
                     showToast('视图创建失败', error.message || '请检查高级视图接口。', 'error');
                 } finally {
@@ -3329,10 +3351,10 @@
                 try {
                     showGlobalLoading(true);
                     await sendForm('/api/advanced/indexes', 'POST', payload);
+                    showGlobalLoading(false);
                     showToast('索引创建成功', '已提交创建索引请求。');
                     event.target.reset();
-                    await loadAdvanced(true);
-                    await loadLogs(true);
+                    await refreshAfterMutation([loadAdvanced(true)]);
                 } catch (error) {
                     showToast('索引创建失败', error.message || '请检查高级索引接口。', 'error');
                 } finally {
@@ -3346,9 +3368,10 @@
                 try {
                     showGlobalLoading(true);
                     await sendForm('/api/advanced/batch-insert', 'POST', payload);
+                    showGlobalLoading(false);
                     showToast('批量插入成功', '批量插入请求已提交。');
                     event.target.reset();
-                    await Promise.all([loadEmployees(true), loadDashboard(true), loadLogs(true)]);
+                    await refreshAfterMutation([loadEmployees(true), loadDepartmentStats(true)]);
                 } catch (error) {
                     showToast('批量插入失败', error.message || '请检查批量插入接口。', 'error');
                 } finally {
@@ -3362,9 +3385,10 @@
                 try {
                     showGlobalLoading(true);
                     await sendForm('/api/advanced/transfer', 'POST', payload);
+                    showGlobalLoading(false);
                     showToast('事务演示成功', '薪资转移事务已提交。');
                     event.target.reset();
-                    await Promise.all([loadEmployees(true), loadDashboard(true), loadLogs(true), loadAttendance(true)]);
+                    await refreshAfterMutation([loadEmployees(true), loadDepartmentStats(true), loadAttendance(true)]);
                 } catch (error) {
                     showToast('事务演示失败', error.message || '请检查事务接口。', 'error');
                 } finally {
