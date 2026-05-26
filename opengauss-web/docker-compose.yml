@@ -1,0 +1,13 @@
+services:
+  opengauss:
+    container_name: opengauss-web-db
+    image: enmotech/opengauss:3.0.0
+    restart: always
+    privileged: true
+    environment:
+      - GS_PASSWORD=Root@123456
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "15432:5432"
