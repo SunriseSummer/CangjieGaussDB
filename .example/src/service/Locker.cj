@@ -4,7 +4,7 @@ import demo.dao.*
 import std.time.*
 import stdx.logger.*
 import stdx.log.*
-import opengauss.slog.*
+import cangjie_tpc::opengauss.slog.*
 import std.database.sql.*
 
 // CREATE TABLE lock_t (
@@ -32,8 +32,8 @@ public class Locker {
         try {
             let sqlSelect = "select locked, locked_by from ${tableName} where lock_name = ? for update"
             var result = connector.select(sqlSelect, [lockName])
-            if (result.next() && (result.getOrNull<Bool>(1) ?? false)) {
-                if (result.get<String>(2) != lockedBy) {
+            if (result.next() && (result.getOrNull<Bool>(0) ?? false)) {
+                if (result.get<String>(1) != lockedBy) {
                     return false
                 }
             }
