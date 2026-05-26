@@ -4,8 +4,8 @@ import demo.dao.*
 import std.time.*
 import std.math.numeric.*
 import std.database.sql.*
-import opengauss.driver.*
-import opengauss.slog.*
+import cangjie_tpc::opengauss.driver.*
+import cangjie_tpc::opengauss.slog.*
 import stdx.logger.*
 import stdx.log.*
 

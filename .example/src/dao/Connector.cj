@@ -2,8 +2,8 @@ package demo.dao
 
 import std.time.*
 import std.database.sql.*
-import opengauss.driver.*
-import opengauss.slog.*
+import cangjie_tpc::opengauss.driver.*
+import cangjie_tpc::opengauss.slog.*
 import stdx.logger.*
 import stdx.log.*
 
@@ -12,7 +12,7 @@ public class Connector {
 
     public Connector(var url: String, var driverStr: String) {
         var driver = DriverManager.getDriver(driverStr).getOrThrow()
-        var dataSource = driver.open(url)
+        var dataSource = driver.open(url, [])
 	    conn = dataSource.connect()
     }
 
@@ -20,7 +20,7 @@ public class Connector {
         var statement = conn.prepareStatement(sqlStr)
         try {
             for (i in 0..values.size) {
-                statement.set(i + 1, values[i])
+                statement.set(i, values[i])
             }
             return statement.query()
         } finally {
@@ -32,7 +32,7 @@ public class Connector {
         var statement = conn.prepareStatement(sqlStr)
         try {
             for (i in 0..values.size) {
-                statement.set(i + 1, values[i])
+                statement.set(i, values[i])
             }
             return statement.update()
         } finally {

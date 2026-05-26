@@ -7,7 +7,7 @@ import std.collection.concurrent.*
 import std.time.*
 import stdx.logger.*
 import stdx.log.*
-import opengauss.slog.*
+import cangjie_tpc::opengauss.slog.*
 import std.database.sql.*
 
 // CREATE TABLE sequence_id_generator (
@@ -97,12 +97,12 @@ public class IdGenerator {
             var selectSql = "select id, current_max_id, step from ${tableName} where biz_type = ? for update"
             var result = connector.select(selectSql, [bizType])
             if (result.next()) {
-                if (result.get<Int64>(3) != step) {
+                if (result.get<Int64>(2) != step) {
                     throw Exception("The step size is inconsistent with the step in database")
                 }
                 var updateSql = "update ${tableName} set current_max_id = current_max_id + step where id = ? and biz_type = ?"
-                connector.update(updateSql, [result.get<Int64>(1), bizType])
-                var from= result.get<Int64>(2)
+                connector.update(updateSql, [result.get<Int64>(0), bizType])
+                var from= result.get<Int64>(1)
                 var to = from + step
                 return (from, to)
             } else {
