@@ -1,6 +1,7 @@
 package opengauss_web.service
 
 import opengauss_web.dao.*
+import opengauss_web.util.*
 
 public class AdvancedService {
     private let db: DbConnector
@@ -18,6 +19,9 @@ public class AdvancedService {
     }
 
     public func createView(name: String, query: String): String {
+        if (!isIdentifier(name)) {
+            return jsonFail("Invalid view name")
+        }
         try {
             db.execute("CREATE OR REPLACE VIEW ${name} AS ${query}", [])
             db.execute(
@@ -39,6 +43,9 @@ public class AdvancedService {
     }
 
     public func createIndex(table: String, column: String): String {
+        if (!isIdentifier(table) || !isIdentifier(column)) {
+            return jsonFail("Invalid table or column name")
+        }
         let idxName = "idx_${table}_${column}"
         try {
             db.execute("CREATE INDEX ${idxName} ON ${table}(${column})", [])

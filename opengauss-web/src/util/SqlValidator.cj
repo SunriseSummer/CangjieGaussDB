@@ -1,5 +1,9 @@
 package opengauss_web.util
 
+// Validates that a SQL string is a single SELECT statement.
+// Strips leading whitespace and SQL comments (block and line comments),
+// checks the first keyword is SELECT, and rejects multi-statement
+// input (semicolons followed by non-whitespace).
 public func isSelectQuery(sqlStr: String): Bool {
     let bytes = sqlStr.toArray()
     let start = skipNoise(bytes)
@@ -56,4 +60,18 @@ func hasMultiStmt(bytes: Array<UInt8>): Bool {
         }
     }
     return false
+}
+
+// Validates that a string is a safe SQL identifier (letters, digits, underscore).
+public func isIdentifier(s: String): Bool {
+    if (s.size == 0) { return false }
+    let bytes = s.toArray()
+    for (b in bytes) {
+        let ok = (b >= 65 && b <= 90) ||   // A-Z
+                 (b >= 97 && b <= 122) ||   // a-z
+                 (b >= 48 && b <= 57) ||    // 0-9
+                 b == 95                     // _
+        if (!ok) { return false }
+    }
+    return true
 }

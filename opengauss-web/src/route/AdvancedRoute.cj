@@ -38,11 +38,13 @@ public func registerAdvancedRoutes(server: Server, svc: AdvancedService) {
             if (ctx.request.method == "POST") {
                 let f = parseForm(readBody(ctx))
                 let count = parseInt64Or(f.get("count") ?? "0", 0)
-                let prefix = f.get("prefix") ?? "User"
+                let rawPrefix = f.get("prefix") ?? "User"
+                let prefix = if (rawPrefix.size > 0) { rawPrefix } else { "User" }
                 let deptId = parseInt64Or(f.get("department_id") ?? "1", 1)
+                let initial = prefix.toArray()[0]
                 let data = Array<(String, String, Int64)>(count) {
                     i => ("${prefix}_${i+1}",
-                          "${prefix.toArray()[0]}${i+1}@example.com",
+                          "${initial}${i+1}@example.com",
                           deptId)
                 }
                 jsonResponse(ctx, svc.batchInsert(data))
