@@ -111,16 +111,27 @@ public class DbConnector {
 }
 
 public func escapeJson(s: String): String {
-    let sb = StringBuilder()
-    for (c in s) {
-        match (c) {
-            case '"' => sb.append("\\\"")
-            case '\\' => sb.append("\\\\")
-            case '\n' => sb.append("\\n")
-            case '\r' => sb.append("\\r")
-            case '\t' => sb.append("\\t")
-            case _ => sb.append(c.toString())
+    let bytes = s.toArray()
+    let result = ArrayList<UInt8>()
+    for (b in bytes) {
+        if (b == 34) {
+            result.add(92)
+            result.add(34)
+        } else if (b == 92) {
+            result.add(92)
+            result.add(92)
+        } else if (b == 10) {
+            result.add(92)
+            result.add(110)
+        } else if (b == 13) {
+            result.add(92)
+            result.add(114)
+        } else if (b == 9) {
+            result.add(92)
+            result.add(116)
+        } else {
+            result.add(b)
         }
     }
-    return sb.toString()
+    return String.fromUtf8(result.toArray())
 }

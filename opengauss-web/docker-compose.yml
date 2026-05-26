@@ -5,7 +5,7 @@ services:
     restart: always
     privileged: true
     environment:
-      - GS_PASSWORD=Root123456
+      - GS_PASSWORD=Root@123456
       - TZ=Asia/Shanghai
     volumes:
       - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
